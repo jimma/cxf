@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.apache.cxf</groupId>
         <artifactId>cxf</artifactId>
-        <version>3.1.4</version>
+        <version>3.1.4.patch01</version>
     </parent>
     <modules>
         <module>wsdl</module>
