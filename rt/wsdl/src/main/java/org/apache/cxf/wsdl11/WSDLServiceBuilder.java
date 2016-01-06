@@ -51,6 +51,7 @@ import javax.wsdl.extensions.ExtensibilityElement;
 import javax.wsdl.extensions.soap.SOAPBinding;
 import javax.wsdl.extensions.soap12.SOAP12Binding;
 import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamException;
 
 import org.w3c.dom.Element;
 
@@ -78,16 +79,19 @@ import org.apache.cxf.service.model.OperationInfo;
 import org.apache.cxf.service.model.ServiceInfo;
 import org.apache.cxf.service.model.ServiceSchemaInfo;
 import org.apache.cxf.service.model.UnwrappedOperationInfo;
+import org.apache.cxf.staxutils.StaxUtils;
 import org.apache.cxf.transport.DestinationFactory;
 import org.apache.cxf.transport.DestinationFactoryManager;
 import org.apache.cxf.wsdl.JAXBExtensibilityElement;
 import org.apache.cxf.wsdl.WSDLManager;
 import org.apache.cxf.wsdl.binding.WSDLBindingFactory;
+import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaComplexContentExtension;
 import org.apache.ws.commons.schema.XmlSchemaComplexType;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 import org.apache.ws.commons.schema.XmlSchemaSequence;
 import org.apache.ws.commons.schema.XmlSchemaSequenceMember;
+import org.apache.ws.commons.schema.XmlSchemaSerializer.XmlSchemaSerializerException;
 import org.apache.ws.commons.schema.XmlSchemaType;
 
 import static org.apache.cxf.helpers.CastUtils.cast;
@@ -883,6 +887,18 @@ public class WSDLServiceBuilder {
                                                                LOG,
                                                                part.getName(),
                                                                part.getElementName());
+                    for (XmlSchema xmlSchema : schemas.getXmlSchemas()) {
+                        LOG.fine("Can't find schema element from namespace : " + xmlSchema.getTargetNamespace());
+                        LOG.fine("-------------------------------------------------------------------------------");
+                        java.io.StringWriter strWriter = new java.io.StringWriter();
+                        try {
+                            StaxUtils.writeNode(xmlSchema.getSchemaDocument(), 
+                                                StaxUtils.createXMLStreamWriter(strWriter), true);
+                        } catch (XMLStreamException | XmlSchemaSerializerException e) {
+                            e.printStackTrace();
+                        }
+                        LOG.fine(strWriter.getBuffer().toString());
+                    }                      
                     throw new WSDLRuntimeException(errorMessage);
                 }
                 pi.setElement(true);
