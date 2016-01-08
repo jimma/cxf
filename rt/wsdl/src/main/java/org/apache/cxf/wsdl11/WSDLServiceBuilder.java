@@ -888,8 +888,8 @@ public class WSDLServiceBuilder {
                                                                part.getName(),
                                                                part.getElementName());
                     for (XmlSchema xmlSchema : schemas.getXmlSchemas()) {
-                        LOG.fine("Can't find schema element from namespace : " + xmlSchema.getTargetNamespace());
-                        LOG.fine("-------------------------------------------------------------------------------");
+                        System.out.println("Can't find schema element from namespace : " + xmlSchema.getTargetNamespace());
+                        System.out.println("-------------------------------------------------------------------------------");
                         java.io.StringWriter strWriter = new java.io.StringWriter();
                         try {
                             StaxUtils.writeNode(xmlSchema.getSchemaDocument(), 
@@ -897,7 +897,7 @@ public class WSDLServiceBuilder {
                         } catch (XMLStreamException | XmlSchemaSerializerException e) {
                             e.printStackTrace();
                         }
-                        LOG.fine(strWriter.getBuffer().toString());
+                        System.out.println(strWriter.getBuffer().toString());
                     }                      
                     throw new WSDLRuntimeException(errorMessage);
                 }
