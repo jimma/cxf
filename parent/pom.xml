@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.cxf</groupId>
         <artifactId>cxf</artifactId>
-        <version>3.1.4.debug</version>
+        <version>3.1.4.patch01-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>cxf-parent</artifactId>
@@ -129,7 +129,7 @@
         <cxf.oauth.version>20100527</cxf.oauth.version>
         <cxf.opensaml.version>3.1.1</cxf.opensaml.version>
         <cxf.opensaml.osgi.version>3.1.1_3</cxf.opensaml.osgi.version>
-        <cxf.opensaml.osgi.version.range>[3.1.4.debug)</cxf.opensaml.osgi.version.range>
+        <cxf.opensaml.osgi.version.range>[3.1.4.patch01-SNAPSHOT)</cxf.opensaml.osgi.version.range>
         <cxf.rhino.version>1.7R2</cxf.rhino.version>
         <cxf.reflections.bundle.version>0.9.9_2</cxf.reflections.bundle.version>
         <cxf.servlet-api.group>org.apache.geronimo.specs</cxf.servlet-api.group>
@@ -148,7 +148,7 @@
         <cxf.swagger2.version>1.5.4</cxf.swagger2.version>
         <cxf.velocity.version>1.7</cxf.velocity.version>
         <cxf.woodstox.core.version>4.4.1</cxf.woodstox.core.version>
-        <cxf.woodstox.stax2-api.version>3.1.4.debug</cxf.woodstox.stax2-api.version>
+        <cxf.woodstox.stax2-api.version>3.1.4.patch01-SNAPSHOT</cxf.woodstox.stax2-api.version>
         <cxf.wsdl4j.version>1.6.3</cxf.wsdl4j.version>
         <cxf.wss4j.version>2.1.4</cxf.wss4j.version>
         <cxf.xerces.version>2.11.0</cxf.xerces.version>
