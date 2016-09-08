@@ -89,7 +89,13 @@ public class JMSDestination extends AbstractMultiplexDestination implements Mess
             && !robust) {
             return null;
         }
-        return new BackChannelConduit(inMessage, jmsConfig, connection);
+
+        if (jmsConfig.isOneSessionPerConnection()) {
+            return new BackChannelConduit(inMessage, jmsConfig);
+        } else {
+            return new BackChannelConduit(inMessage, jmsConfig, connection);
+        }
+
     }
 
     /**
@@ -101,14 +107,17 @@ public class JMSDestination extends AbstractMultiplexDestination implements Mess
         try {
             this.jmsListener = createTargetDestinationListener();
         } catch (Exception e) {
-            // If first connect fails we will try to establish the connection in the background
-            new Thread(new Runnable() {
+            if (!jmsConfig.isOneSessionPerConnection()) {
+                // If first connect fails we will try to establish the connection in the background
+                new Thread(new Runnable() {
 
-                @Override
-                public void run() {
-                    restartConnection();
-                }
-            }).start();
+                    @Override
+                    public void run() {
+                        restartConnection();
+
+                    }
+                }).start();
+            }
         }
     }
 
@@ -116,21 +125,27 @@ public class JMSDestination extends AbstractMultiplexDestination implements Mess
     private JMSListenerContainer createTargetDestinationListener() {
         Session session = null;
         try {
-            connection = JMSFactory.createConnection(jmsConfig);
-            ExceptionListener exListener = new ExceptionListener() {
-                public void onException(JMSException exception) {
-                    if (!shutdown) {
-                        LOG.log(Level.WARNING, "Exception on JMS connection. Trying to reconnect", exception);
-                        restartConnection();
-                    }
-                }
-            };
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            Destination destination = jmsConfig.getTargetDestination(session);
 
-            PollingMessageListenerContainer container = new PollingMessageListenerContainer(connection,
-                                                                                            destination, 
-                                                                                            this, exListener);
+            PollingMessageListenerContainer container;
+            if (!jmsConfig.isOneSessionPerConnection()) {
+                connection = JMSFactory.createConnection(jmsConfig);
+                ExceptionListener exListener = new ExceptionListener() {
+                    public void onException(JMSException exception) {
+                        if (!shutdown) {
+                            LOG.log(Level.WARNING, "Exception on JMS connection. Trying to reconnect", exception);
+                            restartConnection();
+                        }
+                    }
+                };
+                connection.setExceptionListener(exListener);
+                session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                Destination destination = jmsConfig.getTargetDestination(session);
+
+                container = new PollingMessageListenerContainer(connection, destination, this, exListener);
+            } else {
+                container = new PollingMessageListenerContainer(jmsConfig, false, this);
+            }
+
             container.setConcurrentConsumers(jmsConfig.getConcurrentConsumers());
             container.setTransactionManager(jmsConfig.getTransactionManager());
             container.setMessageSelector(jmsConfig.getMessageSelector());
@@ -145,7 +160,9 @@ public class JMSDestination extends AbstractMultiplexDestination implements Mess
             container.setJndiEnvironment(jmsConfig.getJndiEnvironment());
             container.start();
             suspendedContinuations.setListenerContainer(container);
-            connection.start();
+            if (!jmsConfig.isOneSessionPerConnection()) {
+                connection.start();
+            }
             return container;
         } catch (JMSException e) {
             throw JMSUtil.convertJmsException(e);

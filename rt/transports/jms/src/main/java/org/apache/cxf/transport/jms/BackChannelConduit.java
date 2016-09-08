@@ -62,6 +62,13 @@ class BackChannelConduit extends AbstractConduit implements JMSExchangeSender {
         this.jmsConfig = jmsConfig;
         this.connection = connection;
     }
+    
+    BackChannelConduit(Message inMessage, JMSConfiguration jmsConfig) {
+        super(EndpointReferenceUtils.getAnonymousEndpointReference());
+        this.inMessage = inMessage;
+        this.jmsConfig = jmsConfig;
+    }
+    
     @Override
     public void close(Message msg) throws IOException {
         MessageStreamUtil.closeStreams(msg);
@@ -121,8 +128,14 @@ class BackChannelConduit extends AbstractConduit implements JMSExchangeSender {
 
     private void send(final Message outMessage, final Object replyObj, ResourceCloser closer)
         throws JMSException {
-        Session session = closer.register(connection.createSession(false, Session.AUTO_ACKNOWLEDGE));
-
+        Connection c;
+        if (jmsConfig.isOneSessionPerConnection()) {
+            c = closer.register(JMSFactory.createConnection(jmsConfig));
+        } else {
+            c = this.connection;
+        }
+        Session session = closer.register(c.createSession(false, Session.AUTO_ACKNOWLEDGE));
+        
         JMSMessageHeadersType outProps = (JMSMessageHeadersType)outMessage.get(JMS_SERVER_RESPONSE_HEADERS);
         JMSMessageHeadersType inProps = (JMSMessageHeadersType)inMessage.get(JMS_SERVER_REQUEST_HEADERS);
         initResponseMessageProperties(outProps, inProps);
@@ -178,6 +191,7 @@ class BackChannelConduit extends AbstractConduit implements JMSExchangeSender {
         messageProperties.setJMSDeliveryMode(inMessageProperties.getJMSDeliveryMode());
         messageProperties.setJMSPriority(inMessageProperties.getJMSPriority());
         messageProperties.setSOAPJMSRequestURI(inMessageProperties.getSOAPJMSRequestURI());
+        messageProperties.setSOAPJMSSOAPAction(inMessageProperties.getSOAPJMSSOAPAction());
         messageProperties.setSOAPJMSBindingVersion("1.0");
     }
 
