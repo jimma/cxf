@@ -79,15 +79,12 @@ public class PollingMessageListenerContainer extends AbstractMessageListenerCont
             while (running) {
                 try (ResourceCloser closer = new ResourceCloser()) {
                     closer.register(createInitialContext());
-                    Connection connection;
                     if (jmsConfig != null && jmsConfig.isOneSessionPerConnection()) {
                         connection = closer.register(createConnection());
-                    } else {
-                        connection = PollingMessageListenerContainer.this.connection;
                     }
                     // Create session early to optimize performance
                     session = closer.register(connection.createSession(transacted, acknowledgeMode));
-                    MessageConsumer consumer;
+                    MessageConsumer consumer = closer.register(createConsumer(session));
                     if (jmsConfig != null && jmsConfig.isOneSessionPerConnection()) {
                         Destination destination;
                         if (!isReply()) {
@@ -97,10 +94,7 @@ public class PollingMessageListenerContainer extends AbstractMessageListenerCont
                         }
                         consumer = closer.register(createConsumer(destination, session));
                         connection.start();
-                    } else {
-                        consumer = closer.register(createConsumer(session));
-                    }
-
+                    } 
                     while (running) {
                         Message message = consumer.receive(1000);
                         try {
@@ -141,46 +135,41 @@ public class PollingMessageListenerContainer extends AbstractMessageListenerCont
                 try (ResourceCloser closer = new ResourceCloser()) {
                     closer.register(createInitialContext());
                     final Transaction externalTransaction = transactionManager.getTransaction();
-                    if ((externalTransaction != null) && (externalTransaction.getStatus() == Status.STATUS_ACTIVE)) {
+                    if ((externalTransaction != null)
+                        && (externalTransaction.getStatus() == Status.STATUS_ACTIVE)) {
                         LOG.log(Level.SEVERE, "External transactions are not supported in XAPoller");
                         throw new IllegalStateException("External transactions are not supported in XAPoller");
                     }
                     transactionManager.begin();
+
+                    if (jmsConfig != null && jmsConfig.isOneSessionPerConnection()) {
+                        connection = closer.register(createConnection());
+                    }
+                    /*
+                     * Create session inside transaction to give it the chance to enlist itself as a resource
+                     */
+                    Session session = closer.register(connection.createSession(transacted, acknowledgeMode));
+                    MessageConsumer consumer = closer.register(createConsumer(session));
+                    if (jmsConfig != null && jmsConfig.isOneSessionPerConnection()) {
+                        Destination destination;
+                        if (!isReply()) {
+                            destination = jmsConfig.getTargetDestination(session);
+                        } else {
+                            destination = jmsConfig.getReplyDestination(session);
+                        }
+                        consumer = closer.register(createConsumer(destination, session));
+                        connection.start();
+                    }
+
+                    Message message = consumer.receive(1000);
                     try {
-                        Connection connection;
-                        if (jmsConfig != null && jmsConfig.isOneSessionPerConnection()) {
-                            connection = closer.register(createConnection());
-                        } else {
-                            connection = PollingMessageListenerContainer.this.connection;
-                        }
-
-                        /*
-                         * Create session inside transaction to give it the
-                         * chance to enlist itself as a resource
-                         */
-                        Session session = closer.register(connection.createSession(transacted, acknowledgeMode));
-                        MessageConsumer consumer;
-                        if (jmsConfig != null && jmsConfig.isOneSessionPerConnection()) {
-                            Destination destination;
-                            if (!isReply()) {
-                                destination = jmsConfig.getTargetDestination(session);
-                            } else {
-                                destination = jmsConfig.getReplyDestination(session);
-                            }
-                            consumer = closer.register(createConsumer(destination, session));
-                            connection.start();
-                        } else {
-                            consumer = closer.register(createConsumer(session));
-                        }
-
-                        Message message = consumer.receive(1000);
-
                         if (message != null) {
                             listenerHandler.onMessage(message);
                         }
                         transactionManager.commit();
                     } catch (Throwable e) {
-                        LOG.log(Level.WARNING, "Exception while processing jms message in cxf. Rolling back", e);
+                        LOG.log(Level.WARNING, "Exception while processing jms message in cxf. Rolling back",
+                                e);
                         safeRollBack();
                     }
                 } catch (Exception e) {
