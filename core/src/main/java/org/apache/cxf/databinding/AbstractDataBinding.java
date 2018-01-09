@@ -36,6 +36,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
 import org.apache.cxf.common.util.StringUtils;
@@ -59,6 +60,7 @@ public abstract class AbstractDataBinding implements DataBinding {
     }
     protected boolean mtomEnabled;
     protected int mtomThreshold;
+    //protected CharacterEscapeHandler  characterEscapeHandler = (CharacterEscapeHandler)MinimumEscapeHandler.theInstance;
     private Bus bus;
     private Collection<DOMSource> schemas;
     private Map<String, String> namespaceMap;
@@ -296,6 +298,7 @@ public abstract class AbstractDataBinding implements DataBinding {
         }
     }
 
+    
     public void setMtomEnabled(boolean enabled) {
         mtomEnabled = enabled;
     }

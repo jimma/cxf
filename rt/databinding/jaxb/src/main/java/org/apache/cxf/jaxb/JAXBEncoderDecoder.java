@@ -195,6 +195,10 @@ public final class JAXBEncoderDecoder {
             // generate the xml declaration.
             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, false);
+            
+            //CharacterEscapeHandler escapeHandler =  MinimumEscapeHandler.theInstance;
+            //marshaller.setProperty("com.sun.xml.bind.characterEscapeHandler",escapeHandler);
+
         } catch (javax.xml.bind.PropertyException e) {
             // intentionally empty.
         }

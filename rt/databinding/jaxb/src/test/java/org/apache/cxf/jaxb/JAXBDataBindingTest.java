@@ -260,7 +260,10 @@ public class JAXBDataBindingTest extends Assert {
             xmlWriter.flush();
             String xml = stringWriter.toString();
             assertTrue("Failed to map namespace " + xml, xml.contains("greenland=\"uri:ultima:thule"));
-        } finally {
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
             if (!asm) {
                 ReflectionUtil.setAccessible(ReflectionUtil.getDeclaredField(ASMHelper.class, "badASM"))
                     .set(null, Boolean.FALSE);

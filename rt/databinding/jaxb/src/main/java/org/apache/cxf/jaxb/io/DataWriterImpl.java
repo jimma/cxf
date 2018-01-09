@@ -130,6 +130,8 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.FALSE);
             marshaller.setListener(databinding.getMarshallerListener());
+       
+            marshaller.setProperty("com.sun.xml.bind.characterEscapeHandler", NoEscapeHandler.theInstance);
             if (setEventHandler) {
                 ValidationEventHandler h = veventHandler;
                 if (veventHandler == null) {
