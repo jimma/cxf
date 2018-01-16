@@ -109,15 +109,5 @@
             <artifactId>${cxf.asm.artifactId}</artifactId>
             <optional>true</optional>
         </dependency>
-                <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-impl</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-core</artifactId>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 </project>

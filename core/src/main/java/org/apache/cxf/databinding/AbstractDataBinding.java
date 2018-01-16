@@ -60,7 +60,6 @@ public abstract class AbstractDataBinding implements DataBinding {
     }
     protected boolean mtomEnabled;
     protected int mtomThreshold;
-    //protected CharacterEscapeHandler  characterEscapeHandler = (CharacterEscapeHandler)MinimumEscapeHandler.theInstance;
     private Bus bus;
     private Collection<DOMSource> schemas;
     private Map<String, String> namespaceMap;
