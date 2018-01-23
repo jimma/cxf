@@ -1543,13 +1543,13 @@ public final class JAXBUtils {
         }
         return null;
     }
-    public static void setMinimumEscapeHandler(Marshaller marshaller) {
+    public static void setMinimumEscapeHandler(Marshaller marshaller, Object writer) {
         if (jaxbEscapeHandler == null) {
-            jaxbEscapeHandler = createEscapeHandler(marshaller.getClass());
+            jaxbEscapeHandler = createEscapeHandler(marshaller.getClass(), writer);
         }
-        setMinimumEscapeHandler(marshaller, jaxbEscapeHandler);
+        setEscapeHandler(marshaller, jaxbEscapeHandler);
     }
-    public static void setMinimumEscapeHandler(Marshaller marshaller, Object escapeHandler) {
+    public static void setEscapeHandler(Marshaller marshaller, Object escapeHandler) {
         try {
             String postFix = getPostfix(marshaller.getClass());
             marshaller.setProperty("com.sun.xml" + postFix + ".bind.characterEscapeHandler", escapeHandler);
@@ -1559,7 +1559,7 @@ public final class JAXBUtils {
         }
     }
     
-    public static Object createEscapeHandler(Class<?> cls) {
+    public static Object createEscapeHandler(Class<?> cls, Object writer) {
         try {
             String postFix = getPostfix(cls);
             if (postFix == null) {
@@ -1576,7 +1576,7 @@ public final class JAXBUtils {
             Object targetHandler = ReflectionUtil.getDeclaredField(handlerClass, "theInstance").get(null);
             return ProxyHelper.getProxy(cls.getClassLoader(),
                                         new Class[] {handlerInterface},
-                                        new EscapeHandlerInvocationHandler(targetHandler));
+                                        new EscapeHandlerInvocationHandler(targetHandler, writer));
         } catch (Exception e) {
             e.printStackTrace();
             LOG.log(Level.INFO, "Failed to create MinumEscapeHandler", e);

@@ -108,7 +108,7 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
 
     }
 
-    public Marshaller createMarshaller(Object elValue, MessagePartInfo part) {
+    public Marshaller createMarshaller(Object elValue, MessagePartInfo part, T output) {
         Class<?> cls = null;
         if (part != null) {
             cls = part.getTypeClass();
@@ -130,8 +130,7 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.FALSE);
             marshaller.setListener(databinding.getMarshallerListener());
-            JAXBUtils.setMinimumEscapeHandler(marshaller, databinding.getEscapeHandler());
-
+            JAXBUtils.setMinimumEscapeHandler(marshaller, output);
             if (setEventHandler) {
                 ValidationEventHandler h = veventHandler;
                 if (veventHandler == null) {
@@ -223,7 +222,7 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
                 && part != null
                 && Boolean.TRUE.equals(part.getProperty(JAXBDataBinding.class.getName()
                                                         + ".CUSTOM_EXCEPTION"))) {
-                JAXBEncoderDecoder.marshallException(createMarshaller(obj, part),
+                JAXBEncoderDecoder.marshallException(createMarshaller(obj, part, output),
                                                      (Exception)obj,
                                                      part,
                                                      output);
@@ -231,7 +230,7 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
             } else {
                 Annotation[] anns = getJAXBAnnotation(part);
                 if (!honorJaxbAnnotation || anns.length == 0) {
-                    JAXBEncoderDecoder.marshall(createMarshaller(obj, part), obj, part, output);
+                    JAXBEncoderDecoder.marshall(createMarshaller(obj, part, output), obj, part, output);
                     onCompleteMarshalling();
                 } else if (honorJaxbAnnotation && anns.length > 0) {
                     //RpcLit will use the JAXB Bridge to marshall part message when it is
@@ -248,7 +247,7 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
                 }
             }
         } else if (needToRender(part)) {
-            JAXBEncoderDecoder.marshallNullElement(createMarshaller(null, part),
+            JAXBEncoderDecoder.marshallNullElement(createMarshaller(null, part, output),
                                                    output, part);
 
             onCompleteMarshalling();

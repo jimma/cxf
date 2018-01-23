@@ -24,13 +24,21 @@ import java.lang.reflect.Method;
 
 public final class EscapeHandlerInvocationHandler implements InvocationHandler {
 
-    private Object target; 
-    public EscapeHandlerInvocationHandler(Object obj) {
+    private Object target;
+    private Object output;
+    public EscapeHandlerInvocationHandler(Object obj, Object output) {
         target = obj;
+        this.output = output;
     }
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Object result = null;
+        //fastinfoset doesn't need escape
+        if (output != null && output.getClass().getName().contains("StAXDocumentSerializer")) {
+            Writer writer = (Writer)args[4];
+            writer.write((char[])args[0], (Integer)args[1], (Integer)args[2]);
+            return result;
+        }
         if (method.getName().equals("escape") && args.length == 5) {
             if ((Integer)args[1] == 0 && (Integer)args[2] == 0) {
                 Writer writer = (Writer)args[4];

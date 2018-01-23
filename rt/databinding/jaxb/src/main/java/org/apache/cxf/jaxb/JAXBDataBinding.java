@@ -204,7 +204,7 @@ public class JAXBDataBinding extends AbstractInterceptorProvidingDataBinding
     private Unmarshaller.Listener unmarshallerListener;
     private Marshaller.Listener marshallerListener;
     private ValidationEventHandler validationEventHandler;
-    private Object escapeHandler;
+    //private Object escapeHandler;
 
     private boolean unwrapJAXBElement = true;
     private boolean scanPackages = true;
@@ -250,12 +250,12 @@ public class JAXBDataBinding extends AbstractInterceptorProvidingDataBinding
 
     public final void setContext(JAXBContext ctx) {
         context = ctx;
-        escapeHandler = JAXBUtils.createEscapeHandler(ctx.getClass());
+        //escapeHandler = JAXBUtils.createEscapeHandler(ctx.getClass());
     }
 
-    public Object getEscapeHandler() {
+    /*public Object getEscapeHandler() {
         return escapeHandler;
-    }
+    }*/
     
     @SuppressWarnings("unchecked")
     public <T> DataWriter<T> createWriter(Class<T> c) {
