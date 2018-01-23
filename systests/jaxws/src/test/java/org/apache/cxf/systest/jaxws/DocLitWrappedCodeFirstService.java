@@ -59,8 +59,8 @@ import org.apache.cxf.systest.jaxws.types.Bar;
                            placement = WSDLDocumentation.Placement.SERVICE_PORT)
     }
 )
-@GZIP
-@FastInfoset
+//@GZIP
+@FastInfoset(force = true)
 public interface DocLitWrappedCodeFirstService {
 
     @Oneway

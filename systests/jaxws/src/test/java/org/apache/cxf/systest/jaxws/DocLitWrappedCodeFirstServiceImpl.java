@@ -41,7 +41,7 @@ import org.apache.cxf.systest.jaxws.types.BarImpl;
             portName = "DocLitWrappedCodeFirstServicePort",
             targetNamespace = "http://cxf.apache.org/systest/jaxws/DocLitWrappedCodeFirstService")
 @WSDLDocumentation("DocLitWrappedCodeFirstService impl")
-@GZIP(threshold = 10)
+//@GZIP(threshold = 10)
 @FastInfoset(force = true)
 public class DocLitWrappedCodeFirstServiceImpl implements DocLitWrappedCodeFirstService {
     public static final String DATA[] = new String[] {"string1", "string2", "string3"};

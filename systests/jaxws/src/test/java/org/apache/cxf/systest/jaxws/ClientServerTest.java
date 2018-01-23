@@ -156,10 +156,11 @@ public class ClientServerTest extends AbstractBusClientServerTestBase {
         SOAPService service = new SOAPService();
         assertNotNull(service);
 
-        Greeter greeter = service.getPort(portName, Greeter.class);
+        Greeter greeter = service.getPort(portName, Greeter.class, new LoggingFeature());
         updateAddressPort(greeter, PORT);
         try {
-            greeter.greetMe("test");
+            String res = greeter.greetMe("/><greetMe/>test");
+            System.out.println("---res --- " + res);
 
             String reply = greeter.sayHi();
             assertNotNull("no response received from service", reply);
