@@ -169,6 +169,7 @@
         <module>tools</module>
         <module>testutils</module>
         <module>rt</module>
+        <module>ee-9</module>
         <module>integration</module>
         <module>maven-plugins</module>
         <module>services</module>

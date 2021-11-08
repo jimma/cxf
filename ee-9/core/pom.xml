@@ -32,8 +32,35 @@
     </parent>
     <properties>
         <transformer-input-dir>${project.basedir}/../../core</transformer-input-dir>
+        <transformer.verison>0.2.0</transformer.verison>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>3.0.0</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.ws</groupId>
+            <artifactId>jakarta.xml.ws-api</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+            <version>2.0.1</version>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -44,11 +71,7 @@
             <artifactId>easymock</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-            <optional>true</optional>
-        </dependency>
+
         <dependency>
             <groupId>${cxf.asm.groupId}</groupId>
             <artifactId>${cxf.asm.artifactId}</artifactId>
@@ -62,6 +85,7 @@
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
+            <version>3.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -86,6 +110,17 @@
         <dependency>
             <groupId>com.fasterxml.woodstox</groupId>
             <artifactId>woodstox-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.cmpn</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -130,17 +165,6 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.cmpn</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
             <groupId>net.java.dev.msv</groupId>
             <artifactId>msv-core</artifactId>
             <optional>true</optional>
@@ -157,10 +181,6 @@
             <artifactId>spring-osgi-core</artifactId>
             <optional>true</optional>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
         </dependency>
         <dependency>
             <groupId>xerces</groupId>
@@ -198,87 +218,50 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--plugin>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-xjc-plugin</artifactId>
-                <version>${cxf.xjc-utils.version}</version>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>generate-sources</id>
+                        <id>transform-generated-sources</id>
                         <phase>process-resources</phase>
                         <goals>
-                            <goal>xsdtojava</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <fork>${cxf.xjcplugin.forkmode}</fork>
-                            <additionalJvmArgs>${cxf.xjc.jvmArgs}</additionalJvmArgs>
-                            <extensions>
-                                <extension>org.apache.cxf.xjcplugins:cxf-xjc-javadoc:${cxf.xjc-utils.version}</extension>
-                                <extension>org.apache.cxf.xjcplugins:cxf-xjc-dv:${cxf.xjc-utils.version}</extension>
-                            </extensions>
-                            <sourceRoot>${basedir}/target/generated-sources/cxf-xjc-plugin</sourceRoot>
-                            <xsdOptions>
-                                <xsdOption>
-                                    <xsd>${basedir}/target/generated-resources/transformed/schemas/wsdl/http.xsd</xsd>
-                                    <bindingFile>${basedir}/target/generated-resources/transformed/schemas/wsdl/http.xjb</bindingFile>
-                                    <catalog>${basedir}/src/main/build-resources/catalog.cat</catalog>
-                                    <extensionArgs>
-                                        <extensionArg>-npa</extensionArg>
-                                        <extensionArg>-Xjavadoc</extensionArg>
-                                    </extensionArgs>
-                                </xsdOption>
-                                <xsdOption>
-                                    <xsd>${basedir}/target/generated-resources/transformed/schemas/wsdl/ws-addr.xsd</xsd>
-                                    <packagename>org.apache.cxf.ws.addressing</packagename>
-                                    <extensionArgs>
-                                        <extensionArg>-Xjavadoc</extensionArg>
-                                        <extensionArg>-npa</extensionArg>
-                                        <extensionArg>-Xdv</extensionArg>
-                                    </extensionArgs>
-                                </xsdOption>
-                                <xsdOption>
-                                    <xsd>${basedir}/src/main/resources/schemas/wsdl/addressing.xsd</xsd>
-                                    <bindingFile>${basedir}/src/main/resources/schemas/wsdl/addressing.xjb</bindingFile>
-                                    <extensionArgs>
-                                        <extensionArg>-npa</extensionArg>
-                                        <extensionArg>-Xjavadoc</extensionArg>
-                                        <extensionArg>-Xdv</extensionArg>
-                                    </extensionArgs>
-                                </xsdOption>
-                                <xsdOption>
-                                    <xsd>${basedir}/src/main/resources/schemas/configuration/security.xsd</xsd>
-                                    <bindingFile>${basedir}/src/main/resources/schemas/configuration/security.xjb</bindingFile>
-                                    <catalog>${basedir}/src/main/build-resources/catalog.cat</catalog>
-                                    <extensionArgs>
-                                        <extensionArg>-npa</extensionArg>
-                                        <extensionArg>-Xdv</extensionArg>
-                                        <extensionArg>-Xjavadoc</extensionArg>
-                                    </extensionArgs>
-                                </xsdOption>
-                                <xsdOption>
-                                    <xsd>${basedir}/src/main/resources/schemas/wsdl/ws-addr-wsdl.xsd</xsd>
-                                    <bindingFile>${basedir}/src/main/resources/schemas/wsdl/ws-addr-wsdl.xjb</bindingFile>
-                                    <extension>true</extension>
-                                    <extensionArgs>
-                                        <extensionArg>-npa</extensionArg>
-                                        <extensionArg>-Xjavadoc</extensionArg>
-                                        <extensionArg>-Xdv</extensionArg>
-                                    </extensionArgs>
-                                </xsdOption>
-                                <xsdOption>
-                                    <xsd>${basedir}/src/main/resources/schemas/wsdl/addressing200403.xsd</xsd>
-                                    <bindingFile>${basedir}/src/main/resources/schemas/wsdl/addressing200403.xjb</bindingFile>
-                                    <extensionArgs>
-                                        <extensionArg>-Xjavadoc</extensionArg>
-                                        <extensionArg>-npa</extensionArg>
-                                        <extensionArg>-Xdv</extensionArg>
-                                    </extensionArgs>
-                                </xsdOption>
-                            </xsdOptions>
+                            <target>
+                                <property name="plugin_classpath" refid="maven.plugin.classpath"/>
+                                <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
+                                    <arg value="${project.basedir}/../../core/target/generated-sources/cxf-xjc-plugin"/>
+                                    <arg value="${project.build.directory}/generated-sources/transformed"/>
+                                    <arg value="-q"/>
+                                    <arg value="-o"/>
+                                    <classpath>
+                                        <pathelement path="${plugin_classpath}"/>
+                                    </classpath>
+                                </java>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin-->
+                <dependencies>
+                    <dependency>
+                        <groupId>org.eclipse.transformer</groupId>
+                        <artifactId>org.eclipse.transformer.cli</artifactId>
+                        <version>${transformer.verison}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>ant-contrib</groupId>
+                        <artifactId>ant-contrib</artifactId>
+                        <version>1.0b3</version>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>ant</groupId>
+                                <artifactId>ant</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
