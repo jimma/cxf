@@ -248,8 +248,14 @@
                             <target>
                                 <property name="plugin_classpath" refid="maven.plugin.classpath"/>
                                 <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
-                                    <arg value="${project.basedir}/../../core/target/generated-sources/cxf-xjc-plugin"/>
-                                    <arg value="${project.build.directory}/generated-sources/transformed"/>
+                                    <arg value="-tr"/>
+                                    <arg value="${project.basedir}/src/main/resources/transform-rules/jakarta-renames.properties"/>
+                                    <arg value="-td"/>
+                                    <arg value="${project.basedir}/src/main/resources/transform-rules/jakarta-direct.properties"/>
+                                    <!--arg value="${project.basedir}/../../core/target/generated-sources/cxf-xjc-plugin"/>
+                                    <arg value="${project.build.directory}/generated-sources/transformed"/-->
+                                    <arg value="${project.basedir}/../../core/tmp/"/>
+                                    <arg value="${project.build.directory}/transforms/"/>
                                     <arg value="-q"/>
                                     <arg value="-o"/>
                                     <classpath>
@@ -290,7 +296,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <delete file="${project.build.directory}/generated-sources/transformed/org/apache/cxf/common/jaxb/NamespaceMapper.java"></delete>
+                                <!--delete file="${project.build.directory}/generated-sources/transformed/org/apache/cxf/common/jaxb/NamespaceMapper.java"></delete-->
                                 <delete file="${project.build.directory}/generated-sources/transformed/org/apache/cxf/attachment/ImageDataContentHandler.java"></delete>
                                 <delete file="${project.build.directory}/generated-test-sources/transformed/org/apache/cxf/common/jaxb/JAXBUtilsTest.java"></delete>
                             </target>

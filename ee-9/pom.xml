@@ -52,6 +52,7 @@
                         </goals>
                         <configuration>
                             <source-project>${transformer-input-dir}</source-project>
+                            <configsDir>${project.basedir}/src/main/resources/transform-rules</configsDir>
                         </configuration>
                     </execution>
                 </executions>
