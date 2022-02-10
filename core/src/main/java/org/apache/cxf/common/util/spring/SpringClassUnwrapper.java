@@ -17,8 +17,9 @@
  * under the License.
  */
 
-package org.apache.cxf.common.util;
+package org.apache.cxf.common.util.spring;
 
+import org.apache.cxf.common.util.ClassUnwrapper;
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.Advised;
 import org.springframework.aop.support.AopUtils;
@@ -28,10 +29,9 @@ import org.springframework.util.ClassUtils;
 /**
  *
  */
-class SpringClassUnwrapper implements ClassUnwrapper {
-    SpringClassUnwrapper() throws ClassNotFoundException {
-        Class.forName("org.springframework.aop.support.AopUtils");
-        Class.forName("org.springframework.aop.framework.Advised");
+public class SpringClassUnwrapper implements ClassUnwrapper {
+    public SpringClassUnwrapper() {
+
     }
 
     @Override

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.cxf.common.util;
+package org.apache.cxf.common.util.spring;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.cxf.common.classloader.ClassLoaderUtils;
+import org.apache.cxf.common.util.ClasspathScanner;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -38,14 +39,12 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.util.ClassUtils;
 
-class SpringClasspathScanner extends ClasspathScanner {
+public class SpringClasspathScanner extends ClasspathScanner {
 
     private static final boolean IN_OSGI =  isSpringInOsgi();
     
     
-    SpringClasspathScanner() throws Exception {
-        Class.forName("org.springframework.core.io.support.PathMatchingResourcePatternResolver");
-        Class.forName("org.springframework.core.type.classreading.CachingMetadataReaderFactory");
+    public SpringClasspathScanner() {
     }
     private static boolean isSpringInOsgi() {
         try {
@@ -183,7 +182,7 @@ class SpringClasspathScanner extends ClasspathScanner {
     }
 
     private boolean shouldSkip(final String classname) {
-        for (String packageToSkip: PACKAGES_TO_SKIP) {
+        for (String packageToSkip : PACKAGES_TO_SKIP) {
             if (classname.startsWith(packageToSkip)) {
                 return true;
             }

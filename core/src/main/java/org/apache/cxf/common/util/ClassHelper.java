@@ -19,7 +19,6 @@
 
 package org.apache.cxf.common.util;
 
-
 import java.lang.reflect.Proxy;
 
 import org.apache.cxf.Bus;
@@ -35,29 +34,27 @@ public class ClassHelper {
     static final ClassHelper HELPER;
     static final ClassUnwrapper DEFAULT_UNWRAPPER;
     static final ClassUnwrapper UNWRAPPER;
-    
+
     /**
-     * Default class unwrapper implementation which delegates to the ClassHelper
-     * internal methods.
-     *
+     * Default class unwrapper implementation which delegates to the ClassHelper internal methods.
      */
     private static class DefaultClassUnwrapper implements ClassUnwrapper {
         private final ClassHelper helper;
-        
+
         DefaultClassUnwrapper(ClassHelper helper) {
             this.helper = helper;
         }
-        
+
         @Override
         public Class<?> getRealClassFromClass(Class<?> clazz) {
             return helper.getRealClassFromClassInternal(clazz);
         }
-        
+
         @Override
         public Class<?> getRealClass(Object o) {
             return helper.getRealClassInternal(o);
         }
-        
+
         @Override
         public Object getRealObject(Object o) {
             return helper.getRealObjectInternal(o);
@@ -74,18 +71,28 @@ public class ClassHelper {
     }
 
     private static ClassUnwrapper getClassUnwrapper(ClassUnwrapper defaultHelper) {
-        boolean useSpring = true;
+        boolean useSpring = false;
+        try {
+            Class.forName("org.springframework.aop.support.AopUtils");
+            Class.forName("org.springframework.aop.framework.Advised");
+            useSpring = true;
+        } catch (Exception e) {
+            // ignore
+        }
         String s = SystemPropertyAction.getPropertyOrNull("org.apache.cxf.useSpringClassHelpers");
         if (!StringUtils.isEmpty(s)) {
             useSpring = "1".equals(s) || Boolean.parseBoolean(s);
         }
+
         if (useSpring) {
             try {
-                return new SpringClassUnwrapper();
-            } catch (Throwable ex) {
+                return (ClassUnwrapper)Class.forName("org.apache.cxf.common.util.spring.SpringClassUnwrapper")
+                    .newInstance();
+            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 // ignore
             }
         }
+
         return defaultHelper;
     }
 
@@ -123,10 +130,11 @@ public class ClassHelper {
 
     private static ClassUnwrapper getContextClassUnwrapper(Bus bus) {
         if (bus != null && bus.getProperty(ClassUnwrapper.class.getName()) != null) {
-            return  (ClassUnwrapper) bus.getProperty(ClassUnwrapper.class.getName());
+            return (ClassUnwrapper)bus.getProperty(ClassUnwrapper.class.getName());
         }
 
-        return (DEFAULT_UNWRAPPER == UNWRAPPER || checkUseDefaultClassHelper(bus)) ? DEFAULT_UNWRAPPER : UNWRAPPER;
+        return (DEFAULT_UNWRAPPER == UNWRAPPER || checkUseDefaultClassHelper(bus))
+            ? DEFAULT_UNWRAPPER : UNWRAPPER;
     }
 
     private static Bus getBus(Bus bus) {

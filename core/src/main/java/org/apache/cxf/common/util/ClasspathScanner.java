@@ -35,28 +35,35 @@ public class ClasspathScanner {
     public static final String WILDCARD = "*";
     public static final String CLASSPATH_URL_SCHEME = "classpath:";
 
+    // Default packages list to ignore during classpath scanning
+    public static final String[] PACKAGES_TO_SKIP = {"org.apache.cxf"};
+    
     static final ClasspathScanner HELPER;
     static {
         HELPER = getClasspathScanner();
     }
 
-    // Default packages list to ignore during classpath scanning
-    static final String[] PACKAGES_TO_SKIP = {"org.apache.cxf"};
-
-
     protected ClasspathScanner() {
     }
 
     private static ClasspathScanner getClasspathScanner() {
-        boolean useSpring = true;
+        boolean useSpring = false;
+        try {
+            Class.forName("org.springframework.core.io.support.PathMatchingResourcePatternResolver");
+            Class.forName("org.springframework.core.type.classreading.CachingMetadataReaderFactory");
+            useSpring = true;
+        } catch (Throwable ex) {
+            // ignore
+        }
         String s = SystemPropertyAction.getPropertyOrNull("org.apache.cxf.useSpringClassHelpers");
         if (!StringUtils.isEmpty(s)) {
             useSpring = "1".equals(s) || Boolean.parseBoolean(s);
         }
         if (useSpring) {
             try {
-                return new SpringClasspathScanner();
-            } catch (Throwable ex) {
+                return (ClasspathScanner)Class
+                    .forName("org.apache.cxf.common.util.spring.SpringClasspathScanner").newInstance();
+            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 // ignore
             }
         }
@@ -65,6 +72,7 @@ public class ClasspathScanner {
 
     /**
      * Scans list of base packages for all classes marked with specific annotations.
+     * 
      * @param basePackage base package
      * @param annotations annotations to discover
      * @return all discovered classes grouped by annotations they belong too
@@ -72,19 +80,19 @@ public class ClasspathScanner {
      * @throws ClassNotFoundException class not found
      */
     @SafeVarargs
-    public static Map< Class< ? extends Annotation >, Collection< Class< ? > > > findClasses(
-        String basePackage, Class< ? extends Annotation > ... annotations)
+    public static Map<Class<? extends Annotation>, Collection<Class<?>>> findClasses(String basePackage,
+        Class<? extends Annotation>... annotations)
         throws IOException, ClassNotFoundException {
         List<Class<? extends Annotation>> annotationList = new ArrayList<>(annotations.length);
-        for (Class< ? extends Annotation > c : annotations) {
+        for (Class<? extends Annotation> c : annotations) {
             annotationList.add(c);
         }
-        return findClasses(parsePackages(basePackage),
-                           Collections.unmodifiableList(annotationList));
+        return findClasses(parsePackages(basePackage), Collections.unmodifiableList(annotationList));
     }
 
     /**
      * Scans list of base packages for all classes marked with specific annotations.
+     * 
      * @param basePackages list of base packages
      * @param annotations annotations to discover
      * @return all discovered classes grouped by annotations they belong too
@@ -92,11 +100,11 @@ public class ClasspathScanner {
      * @throws ClassNotFoundException class not found
      */
     @SafeVarargs
-    public static Map< Class< ? extends Annotation >, Collection< Class< ? > > > findClasses(
-        Collection< String > basePackages, Class< ? extends Annotation > ... annotations)
+    public static Map<Class<? extends Annotation>, Collection<Class<?>>> findClasses(Collection<String> basePackages,
+        Class<? extends Annotation>... annotations)
         throws IOException, ClassNotFoundException {
         List<Class<? extends Annotation>> annotationList = new ArrayList<>(annotations.length);
-        for (Class< ? extends Annotation > c : annotations) {
+        for (Class<? extends Annotation> c : annotations) {
             annotationList.add(c);
         }
         return findClasses(basePackages, Collections.unmodifiableList(annotationList));
@@ -104,48 +112,48 @@ public class ClasspathScanner {
 
     /**
      * Scans list of base packages for all classes marked with specific annotations.
+     * 
      * @param basePackages list of base packages
      * @param annotations annotations to discover
      * @return all discovered classes grouped by annotations they belong too
      * @throws IOException class metadata is not readable
      * @throws ClassNotFoundException class not found
      */
-    public static Map< Class< ? extends Annotation >, Collection< Class< ? > > > findClasses(
-        Collection< String > basePackages, List<Class< ? extends Annotation > > annotations)
+    public static Map<Class<? extends Annotation>, Collection<Class<?>>> findClasses(Collection<String> basePackages,
+        List<Class<? extends Annotation>> annotations)
         throws IOException, ClassNotFoundException {
         return findClasses(basePackages, annotations, null);
 
     }
 
-    public static Map< Class< ? extends Annotation >, Collection< Class< ? > > > findClasses(
-        Collection< String > basePackages,
-        List<Class< ? extends Annotation > > annotations,
-        ClassLoader loader) throws IOException, ClassNotFoundException {
+    public static Map<Class<? extends Annotation>, Collection<Class<?>>> findClasses(Collection<String> basePackages,
+        List<Class<? extends Annotation>> annotations, ClassLoader loader)
+        throws IOException, ClassNotFoundException {
         return HELPER.findClassesInternal(basePackages, annotations, loader);
     }
 
-    protected Map< Class< ? extends Annotation >, Collection< Class< ? > > > findClassesInternal(
-        Collection< String > basePackages,
-        List<Class< ? extends Annotation > > annotations,
-        ClassLoader loader)
+    protected Map<Class<? extends Annotation>, Collection<Class<?>>> findClassesInternal(
+        Collection<String> basePackages,
+        List<Class<? extends Annotation>> annotations, ClassLoader loader)
         throws IOException, ClassNotFoundException {
         return Collections.emptyMap();
     }
 
     /**
      * Scans list of base packages for all resources with the given extension.
+     * 
      * @param basePackage base package
      * @param extension the extension matching resources needs to have
      * @return list of all discovered resource URLs
      * @throws IOException resource is not accessible
      */
-    public static List<URL> findResources(String basePackage, String extension)
-        throws IOException {
+    public static List<URL> findResources(String basePackage, String extension) throws IOException {
         return findResources(basePackage, extension, null);
     }
 
     /**
      * Scans list of base packages for all resources with the given extension.
+     * 
      * @param basePackage base package
      * @param extension the extension matching resources needs to have
      * @return list of all discovered resource URLs
@@ -158,6 +166,7 @@ public class ClasspathScanner {
 
     /**
      * Scans list of base packages for all resources with the given extension.
+     * 
      * @param basePackages list of base packages
      * @param extension the extension matching resources needs to have
      * @return list of all discovered resource URLs
@@ -191,8 +200,7 @@ public class ClasspathScanner {
         return basePackages;
     }
 
-    protected List<URL> findResourcesInternal(Collection<String> basePackages,
-                                              String extension,
+    protected List<URL> findResourcesInternal(Collection<String> basePackages, String extension,
                                               ClassLoader loader)
         throws IOException {
         return Collections.emptyList();
