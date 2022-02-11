@@ -18,4 +18,5 @@
 #    under the License.
 #
 #
-http\://cxf.apache.org/binding/coloc=org.apache.cxf.binding.coloc.spring.NamespaceHandler
+http\://cxf.apache.org/schemas/configuration/soap.xsd=schemas/configuration/soap.xsd
+http\://cxf.apache.org/schemas/coloc-feature.xsd=schemas/coloc-feature.xsd

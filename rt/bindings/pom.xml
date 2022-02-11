@@ -34,5 +34,6 @@
             <module>xml</module>
             <module>coloc</module>
             <module>corba</module>
+            <module>spring</module>
         </modules>
 </project>

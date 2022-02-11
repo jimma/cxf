@@ -18,4 +18,5 @@
 #    under the License.
 #
 #
-http\://cxf.apache.org/schemas/configuration/soap.xsd=schemas/configuration/soap.xsd
+http\://cxf.apache.org/bindings/soap=org.apache.cxf.binding.soap.spring.NamespaceHandler
+http\://cxf.apache.org/binding/coloc=org.apache.cxf.binding.coloc.spring.NamespaceHandler

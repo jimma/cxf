@@ -19,10 +19,10 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>cxf-rt-bindings-soap</artifactId>
+    <artifactId>cxf-rt-bindings-spring</artifactId>
     <packaging>bundle</packaging>
-    <name>Apache CXF Runtime SOAP Binding</name>
-    <description>Apache CXF Runtime SOAP Binding</description>
+    <name>Apache CXF Runtime Binding Spring</name>
+    <description>Apache CXF Runtime Binding for Spring</description>
     <url>https://cxf.apache.org</url>
     <parent>
         <groupId>org.apache.cxf</groupId>
@@ -48,15 +48,23 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.apache.aries.blueprint</groupId>
-            <artifactId>org.apache.aries.blueprint.core</artifactId>
-            <optional>true</optional>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-core-spring</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-bindings-soap</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
-        <!--dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-bindings-coloc</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
             <optional>true</optional>
@@ -65,27 +73,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
             <optional>true</optional>
-        </dependency-->
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-wsdl</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-databinding-jaxb</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.glassfish.jaxb</groupId>
-                    <artifactId>jaxb-xjc</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
