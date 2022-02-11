@@ -166,6 +166,7 @@
         <module>bom</module>
         <module>parent</module>
         <module>core</module>
+        <module>core-spring</module>
         <module>tools</module>
         <module>testutils</module>
         <module>rt</module>
