@@ -520,6 +520,12 @@
                         
                         <!--compilerId>javac-with-errorprone</compilerId>
                         <forceJavacCompilerUse>true</forceJavacCompilerUse-->
+                        <excludes>
+                            <exclude>**/org/apache/cxf/transport/http/osgi/*.java</exclude>
+                        </excludes>
+                        <testExcludes>
+                            <testExclude>**/org/apache/cxf/transport/http/osgi/*.java</testExclude>
+                        </testExcludes>
                     </configuration>
                     <!--dependencies>
                         <dependency>
