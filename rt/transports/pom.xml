@@ -38,8 +38,8 @@
         <module>http-hc5</module>
         <module>http-netty/netty-server</module>
         <module>http-netty/netty-client</module>
-        <module>jms</module>
+        <!--module>jms</module-->
         <module>udp</module>
-        <module>websocket</module>
+        <!--module>websocket</module-->
     </modules>
 </project>

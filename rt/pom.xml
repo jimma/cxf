@@ -37,7 +37,7 @@
         <module>features</module>
         <module>frontend</module>
         <module>ws</module>
-        <module>rs</module>
+        <!--module>rs</module-->
         <module>management</module>
         <module>javascript</module>
         <module>security</module>

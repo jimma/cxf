@@ -172,7 +172,7 @@
         <module>integration</module>
         <module>maven-plugins</module>
         <module>services</module>
-        <module>osgi</module>
+        <!--module>osgi</module-->
         <module>systests</module>
     </modules>
     <profiles>
@@ -521,6 +521,16 @@
                         
                         <!--compilerId>javac-with-errorprone</compilerId>
                         <forceJavacCompilerUse>true</forceJavacCompilerUse-->
+                        <excludes>
+                            <exclude>**/org/apache/cxf/transport/http/osgi/*.java</exclude>
+                            <!--exclude>**/org/apache/cxf/sts/token/provider/jwt/**.java</exclude>
+                            <exclude>**/org/apache/cxf/sts/token/realm/JWTRealmCodec.java</exclude>
+                            <exclude>**/org/apache/cxf/sts/token/validator/jwt/**.java</exclude>
+                            <exclude>**org/apache/cxf/sts/rest/*.java</exclude-->
+                        </excludes>
+                        <testExcludes>
+                            <testExclude>**/org/apache/cxf/transport/http/osgi/*.java</testExclude>
+                        </testExcludes>
                     </configuration>
                     <!--dependencies>
                         <dependency>

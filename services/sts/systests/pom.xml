@@ -32,7 +32,7 @@
     <modules>
         <module>basic</module>
         <module>advanced</module>
-        <module>sts-osgi</module>
-        <module>sts-itests</module>
+        <!--module>sts-osgi</module>
+        <module>sts-itests</module-->
     </modules>
 </project>
