@@ -35,7 +35,7 @@
         <module>uncategorized</module>
         <module>transports</module>
         <module>forked</module>
-        <!--module>transport-jms</module-->
+        <module>transport-jms</module>
         <module>transport-undertow</module>
         <module>jaxws</module>
         <module>databinding</module>
@@ -48,9 +48,9 @@
         <module>ldap</module>
         <!--module>rs-security</module-->
         <module>wsdl_maven</module>
-        <module>cdi</module>
+        <!--module>cdi</module-->
         <!--module>rs-http-sci</module-->
-        <module>tracing</module>
+        <!--module>tracing</module-->
         <module>ws-transfer</module>
         <!--module>rs-sse</module>
         <module>microprofile</module-->
