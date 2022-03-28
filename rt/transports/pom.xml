@@ -40,6 +40,6 @@
         <module>http-netty/netty-client</module>
         <module>jms</module>
         <module>udp</module>
-        <module>websocket</module>
+        <!--module>websocket</module-->
     </modules>
 </project>

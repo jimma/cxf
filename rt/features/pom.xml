@@ -32,7 +32,7 @@
     <modules>
         <module>clustering</module>
         <module>logging</module>
-        <module>metrics</module>
+        <!--module>metrics</module-->
         <module>throttling</module>
     </modules>
 </project>

@@ -33,7 +33,7 @@
         <module>client</module>
         <module>http-sci</module>
         <module>description</module>
-        <module>description-swagger</module>
+        <!--module>description-swagger</module-->
         <module>extensions/json-basic</module>
         <module>extensions/providers</module>
         <module>extensions/search</module>
@@ -44,10 +44,10 @@
         <module>extensions/reactivestreams</module>
         <module>security</module>
         <module>sse</module>
-        <module>description-openapi-v3</module>
+        <!--module>description-openapi-v3</module>
         <module>description-microprofile-openapi</module>
         <module>description-swagger-ui</module>
         <module>microprofile-client</module>
-        <module>description-common-openapi</module>
+        <module>description-common-openapi</module-->
     </modules>
 </project>
