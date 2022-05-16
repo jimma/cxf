@@ -33,7 +33,7 @@ pipeline {
         axes {
           axis {
             name 'JAVA_VERSION'
-            values 'jdk_11_latest', 'jdk_17_latest', 'jdk_18_latest'
+            values 'jdk_17_latest'
           }
         }
         stages {
@@ -51,7 +51,7 @@ pipeline {
             stages {
               stage('Build & Test') {
                 steps {
-                  sh 'mvn -B clean install'
+                  sh 'mvn -B clean install -fae'
                   // step([$class: 'JiraIssueUpdater', issueSelector: [$class: 'DefaultIssueSelector'], scm: scm])
                 }
                 post {
