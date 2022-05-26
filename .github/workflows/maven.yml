@@ -35,7 +35,7 @@ jobs:
           distribution: 'adopt'
       - name: Build with Maven Java ${{ matrix.java }}
         run: |
-          mvn clean install -fae
+          mvn -s ./.m2-settings.xml clean install -fae
       - uses: actions/upload-artifact@v2
         if: failure()
         with:
