@@ -63,6 +63,7 @@ public final class Client {
 
     // Standalone program initialization
     public static void main(String[] args) {
+        System.setProperty("org.glassfish.gmbal.no.multipleUpperBoundsException", "true");
         int status = 0;
         ORB orb = null;
 

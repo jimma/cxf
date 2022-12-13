@@ -263,11 +263,11 @@ public class CorbaDestination implements MultiplexDestination {
         try {
             POA rootPOA = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
             POAManager poaManager = rootPOA.the_POAManager();
-            try {
+           /* try {
                 bindingPOA = rootPOA.find_POA(poaName, false);
             } catch (org.omg.PortableServer.POAPackage.AdapterNonExistent ex) {
                 // do nothing
-            }
+            }*/
 
             // When using object references, we can run into a situation where
             // we are implementing

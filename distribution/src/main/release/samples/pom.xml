@@ -52,6 +52,7 @@
         <cxf.h2.version>2.1.214</cxf.h2.version>
         <cxf.jboss.narayana.version>5.12.7.Final</cxf.jboss.narayana.version>
         <cxf.narayana.spring.boot.version>2.6.7</cxf.narayana.spring.boot.version>
+        <cxf.jacorb.version>3.9</cxf.jacorb.version>
     </properties>
     <dependencies>
         <dependency>
@@ -175,9 +176,19 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>org.glassfish.corba</groupId>
-                <artifactId>glassfish-corba-orb</artifactId>
-                <version>4.2.2</version>
+                <groupId>org.jacorb</groupId>
+                <artifactId>jacorb-omgapi</artifactId>
+                <version>${cxf.jacorb.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.spec.javax.rmi</groupId>
+                <artifactId>jboss-rmi-api_1.0_spec</artifactId>
+                <version>1.0.6.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jacorb</groupId>
+                <artifactId>jacorb</artifactId>
+                <version>${cxf.jacorb.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

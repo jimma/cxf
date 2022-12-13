@@ -67,6 +67,7 @@ public final class Server {
     }
 
     public static void main(String[] args) {
+        System.setProperty("org.glassfish.gmbal.no.multipleUpperBoundsException", "true");
         java.util.Properties props = new Properties();
         props.putAll(System.getProperties());
 

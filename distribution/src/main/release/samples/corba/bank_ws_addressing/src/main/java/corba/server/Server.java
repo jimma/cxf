@@ -54,6 +54,8 @@ public final class Server {
         //
         BankImpl bankImpl = new BankImpl(poa);
 
+
+
         byte[] oid = "Bank".getBytes();
         poa.activate_object_with_id(oid, bankImpl);
 

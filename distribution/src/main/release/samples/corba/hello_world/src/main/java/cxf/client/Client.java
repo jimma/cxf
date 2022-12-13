@@ -29,7 +29,7 @@ public final class Client {
     }
 
     public static void main(String[] args) throws Exception {
-
+        System.setProperty("org.glassfish.gmbal.no.multipleUpperBoundsException", "true");
         HelloWorldCORBAService ss = new HelloWorldCORBAService();
         HelloWorld port = ss.getHelloWorldCORBAPort();
 

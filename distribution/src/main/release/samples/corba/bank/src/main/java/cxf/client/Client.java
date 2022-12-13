@@ -37,6 +37,7 @@ public final class Client {
     }
 
     public static void main(String[] args) throws Exception {
+        System.setProperty("org.glassfish.gmbal.no.multipleUpperBoundsException", "true");
         URL wsdlUrl = Client.class.getResource("/wsdl/bank.wsdl");
 
         BankCORBAService ss = new BankCORBAService(wsdlUrl, SERVICE_NAME);

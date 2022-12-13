@@ -24,6 +24,7 @@ import jakarta.xml.ws.Endpoint;
 public class Server {
 
     protected Server() throws Exception {
+        System.setProperty("org.glassfish.gmbal.no.multipleUpperBoundsException", "true");
         System.out.println("Starting Server");
 
         Object implementor = new HelloWorldImpl();

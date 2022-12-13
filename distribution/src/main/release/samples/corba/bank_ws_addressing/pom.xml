@@ -129,7 +129,7 @@
                 <configuration>
                     <rules>
                         <requireJavaVersion>
-                            <version>17</version>
+                            <version>11</version>
                         </requireJavaVersion>
                     </rules>
                 </configuration>
@@ -249,7 +249,18 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.corba</groupId>
+            <artifactId>glassfish-corba-omgapi</artifactId>
+            <version>4.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.gmbal</groupId>
+            <artifactId>gmbal</artifactId>
+            <version>4.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.corba</groupId>
             <artifactId>glassfish-corba-orb</artifactId>
+            <version>4.2.4</version>
         </dependency>
     </dependencies>
 </project>

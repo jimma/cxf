@@ -41,8 +41,7 @@ public class CorbaBindingTest {
     @Before
     public void setUp() throws Exception {
         java.util.Properties props = System.getProperties();
-
-
+        props.put("org.glassfish.gmbal.no.multipleUpperBoundsException", "true");
         props.put("yoko.orb.id", "CXF-CORBA-Server-Binding");
         orb = ORB.init(new String[0], props);
     }

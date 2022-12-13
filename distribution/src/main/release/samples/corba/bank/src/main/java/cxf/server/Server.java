@@ -24,7 +24,7 @@ public class Server {
 
     protected Server() throws Exception {
         System.out.println("Starting Server");
-
+        System.setProperty("org.glassfish.gmbal.no.multipleUpperBoundsException", "true");
         Object implementor = new BankImpl();
         String address = "file:target/bank.ref";
         Endpoint endpoint = Endpoint.create("http://cxf.apache.org/bindings/corba",
