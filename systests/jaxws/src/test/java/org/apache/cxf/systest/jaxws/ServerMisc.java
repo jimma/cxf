@@ -66,6 +66,7 @@ public class ServerMisc extends AbstractBusTestServerBase {
         "http://localhost:" + PORT + "/CXF5064/";
     public static final String DOCLIT_CODEFIRST_URL_XMLBINDING = 
         "http://localhost:" + PORT + "/XMLBindingCodeFirstService/";
+    public static final String HELLO_WS= "http://localhost:" + PORT + "/hellows/";
 
 
     List<org.apache.cxf.endpoint.Server> servers = new LinkedList<>();
@@ -167,6 +168,8 @@ public class ServerMisc extends AbstractBusTestServerBase {
                          new InheritImpl()));
 
         endpoints.add(Endpoint.publish(CXF_5064_URL, new SOAPHeaderServiceImpl()));
+
+        endpoints.add(Endpoint.publish(HELLO_WS, new HelloWSImpl()));
     }
 
     public static void main(String[] args) {
