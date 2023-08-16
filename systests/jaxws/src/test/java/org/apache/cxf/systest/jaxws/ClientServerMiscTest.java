@@ -19,10 +19,13 @@
 
 package org.apache.cxf.systest.jaxws;
 
+import com.sun.management.UnixOperatingSystemMXBean;
 import jakarta.xml.ws.WebServiceFeature;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.math.BigInteger;
@@ -40,7 +43,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
@@ -263,7 +269,17 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
 
     @Test
     public void testHelloWSTimes() throws Exception {
+        OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+        ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
+        if(os instanceof UnixOperatingSystemMXBean){
 
+            scheduled.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
+                }
+            }, 100, 200, TimeUnit.MILLISECONDS);
+        }
 
         final ThreadFactory threadFactory = new ThreadFactory()
         {
@@ -296,6 +312,8 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
                 es.shutdown();
             }
         }
+
+
 
     }
 
