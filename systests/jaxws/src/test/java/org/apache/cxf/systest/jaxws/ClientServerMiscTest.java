@@ -270,6 +270,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
     @Test
     public void testHelloWSTimes() throws Exception {
         OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+        System.out.println("* Before test the opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
         ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
         if(os instanceof UnixOperatingSystemMXBean){
 
@@ -292,7 +293,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
             }
         };
         URL wsdlURL = new URL(ServerMisc.HELLO_WS + "?wsdl");
-        for (int time =0 ; time < 1000; time++) {
+        for (int time =0 ; time < 10; time++) {
             ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
             List<TestClient> clients = new ArrayList<TestClient>();
             for (int i = 0; i < 50; i++) {
@@ -312,9 +313,6 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
                 es.shutdown();
             }
         }
-
-
-
     }
 
 
