@@ -273,7 +273,6 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
         System.out.println("* Before test the opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
         ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
         if(os instanceof UnixOperatingSystemMXBean){
-
             scheduled.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {

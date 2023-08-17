@@ -117,8 +117,9 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
     public void close() {
         if (client != null) {
             String name = client.toString();
-            client = null;
             tryToShutdownSelector(name);
+            client.shutdownNow();
+            client.close();
         }
         defaultAddress = null;
         super.close();
