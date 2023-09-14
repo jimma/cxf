@@ -19,9 +19,13 @@
 
 package org.apache.cxf.systest.jaxws;
 
+import com.sun.management.UnixOperatingSystemMXBean;
+import jakarta.xml.ws.WebServiceFeature;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.math.BigInteger;
@@ -35,6 +39,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
 
@@ -254,8 +267,83 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
         */
     }
 
-
     @Test
+    public void testHelloWSTimes() throws Exception {
+        OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+        System.out.println("* Before test the opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
+        ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
+        if(os instanceof UnixOperatingSystemMXBean){
+
+            scheduled.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
+                }
+            }, 100, 200, TimeUnit.MILLISECONDS);
+        }
+
+        final ThreadFactory threadFactory = new ThreadFactory()
+        {
+            private AtomicInteger i = new AtomicInteger(0);
+
+            @Override
+            public Thread newThread(Runnable r)
+            {
+                return new Thread(r, "cxf-thread-" + i.getAndIncrement());
+            }
+        };
+        URL wsdlURL = new URL(ServerMisc.HELLO_WS + "?wsdl");
+        for (int time =0 ; time < 100; time++) {
+            ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
+            List<TestClient> clients = new ArrayList<TestClient>();
+            for (int i = 0; i < 50; i++) {
+                clients.add(new TestClient(wsdlURL));
+            }
+            int count = 0;
+            try {
+                List<Future<Boolean>> futures = es.invokeAll(clients);
+                for (Future<Boolean> f : futures) {
+                    if (f.get()) {
+                        count++;
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                es.shutdown();
+            }
+        }
+    }
+
+
+    public class TestClient implements Callable<Boolean>
+    {
+        public final  QName qname = new QName("http://hello/test", "HelloService");
+        public final URL wsdlURL;
+
+        public TestClient(final URL wsdlURL)
+        {
+            this.wsdlURL = wsdlURL;
+        }
+        @Override
+        public Boolean call() throws Exception
+        {
+            Service service = Service.create(wsdlURL, qname);
+            hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
+
+            hello.test.HelloRequest request = new hello.test.HelloRequest();
+            request.setHello("hi");
+            hello.test.HelloResponse response = helloPort.doHello(request);
+            return response.getMultiHello().contains("hi");
+        }
+
+    }
+
+
+
+
+
+        @Test
     public void testAnonymousComplexType() throws Exception {
 
         AnonymousComplexTypeService actService = new AnonymousComplexTypeService();
