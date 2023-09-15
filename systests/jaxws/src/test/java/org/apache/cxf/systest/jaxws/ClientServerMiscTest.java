@@ -51,6 +51,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
 
+import org.apache.cxf.BusFactory;
+//import org.apache.cxf.transport.http.asyncclient.hc5.AsyncHTTPConduit;
+//import org.apache.cxf.transport.http.asyncclient.hc5.AsyncHTTPConduitFactory;
+//import org.apache.cxf.transport.http.netty.client.NettyHttpConduit;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -277,7 +281,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
             scheduled.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println("opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
+                    //System.out.println("opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
                 }
             }, 100, 200, TimeUnit.MILLISECONDS);
         }
@@ -328,12 +332,14 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
         @Override
         public Boolean call() throws Exception
         {
+            BusFactory.getDefaultBus().setProperty("use.async.http.conduit", "ALWAYS");
             Service service = Service.create(wsdlURL, qname);
             hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
 
             hello.test.HelloRequest request = new hello.test.HelloRequest();
             request.setHello("hi");
             hello.test.HelloResponse response = helloPort.doHello(request);
+            //System.out.println("get response :" + response);
             return response.getMultiHello().contains("hi");
         }
 

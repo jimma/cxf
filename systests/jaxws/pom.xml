@@ -312,6 +312,7 @@
             <version>${cxf.jacorb.version}</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
     <profiles>
         <profile>
@@ -319,7 +320,32 @@
             <dependencies>
                 <dependency>
                     <groupId>org.apache.cxf</groupId>
-                    <artifactId>cxf-rt-transports-http-hc</artifactId>
+                    <artifactId>cxf-rt-transports-http-hc5</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>hc5</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-rt-transports-http-hc5</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>netty</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-rt-transports-http-netty-client</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-rt-transports-http-netty-server</artifactId>
                     <version>${project.version}</version>
                 </dependency>
             </dependencies>
