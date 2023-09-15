@@ -277,7 +277,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
             scheduled.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println("opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
+                    //System.out.println("opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
                 }
             }, 100, 200, TimeUnit.MILLISECONDS);
         }
