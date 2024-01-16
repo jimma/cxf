@@ -35,7 +35,7 @@
         <cxf.surefire.usefile>false</cxf.surefire.usefile>
         <org.apache.cxf.transport.websocket.atmosphere.disabled>false</org.apache.cxf.transport.websocket.atmosphere.disabled>
         <cxf.surefire.parallel.mode />
-        <cxf.surefire.fork.vmargs>-ea</cxf.surefire.fork.vmargs>
+        <cxf.surefire.fork.vmargs>-ea -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints</cxf.surefire.fork.vmargs>
         <cxf.server.launcher.vmargs>-ea</cxf.server.launcher.vmargs>
         <cxf.surefire.enable.assertions>true</cxf.surefire.enable.assertions>
         <cxf.checkstyle.extension />
