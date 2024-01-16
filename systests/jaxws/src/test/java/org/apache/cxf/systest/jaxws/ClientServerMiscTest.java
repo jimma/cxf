@@ -273,6 +273,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
     public void testHelloWSTimes() throws Exception {
        /* OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
         Thread.sleep(1000*20);*/
+
         int result = -1;
         do {
             try {
@@ -293,6 +294,8 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
             }
         } while(result !=0);
         System.out.println("profile is started");
+
+
 
         /*System.out.println("* Before test the opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
         ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
@@ -325,7 +328,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
         hello.test.HelloRequest request = new hello.test.HelloRequest();
         request.setHello("hi");
 
-        for (int time =0 ; time < 50000; time++) {
+        for (int time =0 ; time < 500000; time++) {
 
             hello.test.HelloResponse response = helloPort.doHello(request);
             if(response.getMultiHello().contains("hi")) {
