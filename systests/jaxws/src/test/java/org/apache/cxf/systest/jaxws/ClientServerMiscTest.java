@@ -22,6 +22,7 @@ package org.apache.cxf.systest.jaxws;
 import com.sun.management.UnixOperatingSystemMXBean;
 import jakarta.xml.ws.WebServiceFeature;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.lang.management.ManagementFactory;
@@ -273,8 +274,32 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
 
     @Test
     public void testHelloWSTimes() throws Exception {
-        OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
-        Thread.sleep(1000*20);
+       /* OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+        Thread.sleep(1000*20);*/
+
+        int result = -1;
+        do {
+            try {
+                Process process = Runtime.getRuntime().exec("pgrep -f profiler.sh");
+                process.waitFor();
+                result = process.exitValue();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            if (result != 0) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        } while(result !=0);
+        System.out.println("profile is started");
+
+
+
         /*System.out.println("* Before test the opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
         ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
         if(os instanceof UnixOperatingSystemMXBean){
@@ -287,7 +312,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
             }, 100, 200, TimeUnit.MILLISECONDS);
         }*/
 
-        final ThreadFactory threadFactory = new ThreadFactory()
+/*        final ThreadFactory threadFactory = new ThreadFactory()
         {
             private AtomicInteger i = new AtomicInteger(0);
 
@@ -296,10 +321,26 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
             {
                 return new Thread(r, "cxf-thread-" + i.getAndIncrement());
             }
-        };
-        URL wsdlURL = new URL(ServerMisc.HELLO_WS + "?wsdl");
-        for (int time =0 ; time < 1000; time++) {
-            ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
+        };*/
+
+        int count = 0;
+        URL wsdlURL = new URL("http://localhost:9001/hellows/?wsdl");
+        QName qname = new QName("http://hello/test", "HelloService");
+        Service service = Service.create(wsdlURL, qname);
+        hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
+        hello.test.HelloRequest request = new hello.test.HelloRequest();
+        request.setHello("hi");
+
+        for (int time =0 ; time < 500000; time++) {
+
+            hello.test.HelloResponse response = helloPort.doHello(request);
+            if(response.getMultiHello().contains("hi")) {
+                count ++;
+            } else {
+                throw new RuntimeException("exception happens");
+            }
+
+            /*ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
             List<TestClient> clients = new ArrayList<TestClient>();
             for (int i = 0; i < 50; i++) {
                 clients.add(new TestClient(wsdlURL));
@@ -316,38 +357,11 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
                 throw new RuntimeException(e);
             } finally {
                 es.shutdown();
-            }
+            }*/
         }
+        System.out.println("Invoke count " + count);
     }
-
-
-    public class TestClient implements Callable<Boolean>
-    {
-        public final  QName qname = new QName("http://hello/test", "HelloService");
-        public final URL wsdlURL;
-
-        public TestClient(final URL wsdlURL)
-        {
-            this.wsdlURL = wsdlURL;
-        }
-        @Override
-        public Boolean call() throws Exception
-        {
-            BusFactory.getDefaultBus().setProperty("use.async.http.conduit", "ALWAYS");
-            Service service = Service.create(wsdlURL, qname);
-            hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
-
-            hello.test.HelloRequest request = new hello.test.HelloRequest();
-            request.setHello("hi");
-            hello.test.HelloResponse response = helloPort.doHello(request);
-            //System.out.println("get response :" + response);
-            return response.getMultiHello().contains("hi");
-        }
-
-    }
-
-
-
+    
 
 
         @Test
