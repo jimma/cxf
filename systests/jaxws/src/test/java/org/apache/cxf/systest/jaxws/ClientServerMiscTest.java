@@ -269,6 +269,17 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
         */
     }
 
+    /*
+     To exclude the server side profiler, starts the server in a standalone process:(execute under systests/jaxws)
+     mvn exec:java -Dexec.mainClass="org.apache.cxf.systest.jaxws.ServerMisc" -Dexec.classpathScope="test"
+     Then start the client side to run this test :
+     mvn clean install -Dtest=ClientServerMiscTest#testHelloWSTimes -Pnochecks
+     This test will check if the aysnc-profiler is started, once started it will execute the loop.
+     Finding the profiler.sh process is for MacOS, it needs to change another command if it is running on linux.
+     Start the async-profiler with :
+     ./profiler.sh -t -d 300 -f profiler.html pid
+     */
+
     @Test
     public void testHelloWSTimes() throws Exception {
        /* OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
