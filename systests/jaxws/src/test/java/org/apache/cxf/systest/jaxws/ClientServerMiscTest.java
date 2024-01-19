@@ -312,7 +312,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
             }, 100, 200, TimeUnit.MILLISECONDS);
         }*/
 
-/*        final ThreadFactory threadFactory = new ThreadFactory()
+        final ThreadFactory threadFactory = new ThreadFactory()
         {
             private AtomicInteger i = new AtomicInteger(0);
 
@@ -321,31 +321,31 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
             {
                 return new Thread(r, "cxf-thread-" + i.getAndIncrement());
             }
-        };*/
+        };
 
         int count = 0;
         URL wsdlURL = new URL("http://localhost:9001/hellows/?wsdl");
         QName qname = new QName("http://hello/test", "HelloService");
-        Service service = Service.create(wsdlURL, qname);
+        /*Service service = Service.create(wsdlURL, qname);
         hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
         hello.test.HelloRequest request = new hello.test.HelloRequest();
-        request.setHello("hi");
+        request.setHello("hi");*/
 
-        for (int time =0 ; time < 500000; time++) {
+        for (int time =0 ; time < 500; time++) {
 
-            hello.test.HelloResponse response = helloPort.doHello(request);
+            /*hello.test.HelloResponse response = helloPort.doHello(request);
             if(response.getMultiHello().contains("hi")) {
                 count ++;
             } else {
                 throw new RuntimeException("exception happens");
-            }
+            }*/
 
-            /*ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
+            ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
             List<TestClient> clients = new ArrayList<TestClient>();
-            for (int i = 0; i < 50; i++) {
+            for (int i = 0; i < 100; i++) {
                 clients.add(new TestClient(wsdlURL));
             }
-            int count = 0;
+
             try {
                 List<Future<Boolean>> futures = es.invokeAll(clients);
                 for (Future<Boolean> f : futures) {
@@ -357,11 +357,32 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
                 throw new RuntimeException(e);
             } finally {
                 es.shutdown();
-            }*/
+            }
         }
         System.out.println("Invoke count " + count);
     }
-    
+    public class TestClient implements Callable<Boolean>
+    {
+        public final  QName qname = new QName("http://hello/test", "HelloService");
+        public final URL wsdlURL;
+
+        public TestClient(final URL wsdlURL)
+        {
+            this.wsdlURL = wsdlURL;
+        }
+        @Override
+        public Boolean call() throws Exception
+        {
+            Service service = Service.create(wsdlURL, qname);
+            hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
+
+            hello.test.HelloRequest request = new hello.test.HelloRequest();
+            request.setHello("hi");
+            hello.test.HelloResponse response = helloPort.doHello(request);
+            return response.getMultiHello().contains("hi");
+        }
+
+    }
 
 
         @Test
