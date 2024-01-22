@@ -280,6 +280,35 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
      ./profiler.sh -t -d 300 -f profiler.html pid
      */
 
+    /*** This is the test result ***/
+    /*
+        CXF 4.0.4
+[INFO] Running org.apache.cxf.systest.jaxws.ClientServerMiscTest
+CatalogManager.properties: catalogs not found.
+CatalogManager.properties: catalogs not found.
+Invoke count 50000
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 196.1 s -- in org.apache.cxf.systest.jaxws.ClientServerMiscTest
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+
+
+CXF 4.0.0
+[INFO] Running org.apache.cxf.systest.jaxws.ClientServerMiscTest
+Invoke count 50000
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 72.502 s - in org.apache.cxf.systest.jaxws.ClientServerMiscTest
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO]
+[INFO] --- jar:3.3.0:jar (default-jar) @ cxf-systests-jaxws ---
+[INFO] Building jar: /Users/jimma/data/code/cxf/systests/jaxws/target/cxf-systests-jaxws-4.0.0.jar
+     */
+
     @Test
     public void testHelloWSTimes() throws Exception {
        /* OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
