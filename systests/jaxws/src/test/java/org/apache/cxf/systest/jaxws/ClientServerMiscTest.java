@@ -313,26 +313,28 @@ Invoke count 50000
     public void testHelloWSTimes() throws Exception {
        /* OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
         Thread.sleep(1000*20);*/
-        int result = -1;
-        do {
-            try {
-                Process process = Runtime.getRuntime().exec("pgrep -f profiler.sh");
-                process.waitFor();
-                result = process.exitValue();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            if (result != 0) {
+        if (System.getProperty("profiler") != null) {
+            int result = -1;
+            do {
                 try {
-                    Thread.sleep(100);
+                    Process process = Runtime.getRuntime().exec("pgrep -f profiler.sh");
+                    process.waitFor();
+                    result = process.exitValue();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-            }
-        } while(result !=0);
-        System.out.println("profile is started");
+                if (result != 0) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            } while (result != 0);
+            System.out.println("profile is started");
+        }
 
 
 
@@ -367,7 +369,9 @@ Invoke count 50000
         hello.test.HelloRequest request = new hello.test.HelloRequest();
         request.setHello("hi");*/
 
-        for (int time =0 ; time < 500; time++) {
+
+        //warm up with 100 times
+        for (int time =0 ; time < 100; time++) {
 
             /*hello.test.HelloResponse response = helloPort.doHello(request);
             if(response.getMultiHello().contains("hi")) {
@@ -395,7 +399,39 @@ Invoke count 50000
                 es.shutdown();
             }
         }
-        System.out.println("Invoke count " + count);
+
+        count = 0;
+        long start = System.currentTimeMillis();
+        for (int time =0 ; time < 300; time++) {
+
+            /*hello.test.HelloResponse response = helloPort.doHello(request);
+            if(response.getMultiHello().contains("hi")) {
+                count ++;
+            } else {
+                throw new RuntimeException("exception happens");
+            }*/
+
+            ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
+            List<TestClient> clients = new ArrayList<TestClient>();
+            for (int i = 0; i < 100; i++) {
+                clients.add(new TestClient(wsdlURL));
+            }
+
+            try {
+                List<Future<Boolean>> futures = es.invokeAll(clients);
+                for (Future<Boolean> f : futures) {
+                    if (f.get()) {
+                        count++;
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                es.shutdown();
+            }
+        }
+        System.out.println("Invoke count " + count + " Time: " + (System.currentTimeMillis() - start));
+
     }
     public class TestClient implements Callable<Boolean>
     {
