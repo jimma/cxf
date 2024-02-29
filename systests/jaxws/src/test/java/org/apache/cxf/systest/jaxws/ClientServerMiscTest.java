@@ -335,10 +335,12 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
         int count = 0;
         URL wsdlURL = new URL("file:///Users/jimma/tmp/hello.wsdl");
         QName qname = new QName("http://hello/test", "HelloService");
-        /*Service service = Service.create(wsdlURL, qname);
+        Service service = Service.create(wsdlURL, qname);
         hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
-        hello.test.HelloRequest request = new hello.test.HelloRequest();
-        request.setHello("hi");*/
+
+        //hello.test.HelloRequest request = new hello.test.HelloRequest();
+        //request.setHello("hi");*/
+
 
 
         //warm up with 100 times
@@ -354,7 +356,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
             ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
             List<TestClient> clients = new ArrayList<TestClient>();
             for (int i = 0; i < 100; i++) {
-                clients.add(new TestClient(wsdlURL));
+                clients.add(new TestClient(helloPort));
             }
 
             try {
@@ -373,7 +375,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
 
         count = 0;
         //Jprofiler trigger action method
-        (new TestClient(wsdlURL)).triggerMethod();
+        (new TestClient(helloPort)).triggerMethod();
         long start = System.currentTimeMillis();
         for (int time =0 ; time < 300; time++) {
 
@@ -387,7 +389,7 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
             ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
             List<TestClient> clients = new ArrayList<TestClient>();
             for (int i = 0; i < 100; i++) {
-                clients.add(new TestClient(wsdlURL));
+                clients.add(new TestClient(helloPort));
             }
 
             try {
@@ -407,19 +409,17 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
     }
     public class TestClient implements Callable<Boolean>
     {
-        public final  QName qname = new QName("http://hello/test", "HelloService");
-        public final URL wsdlURL;
+        public final hello.test.HelloService helloPort;
 
-        public TestClient(final URL wsdlURL)
+        public TestClient(final hello.test.HelloService helloPort)
         {
-            this.wsdlURL = wsdlURL;
+            this.helloPort = helloPort;
+
+
         }
         @Override
         public Boolean call() throws Exception
         {
-            Service service = Service.create(wsdlURL, qname);
-            hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
-
             hello.test.HelloRequest request = new hello.test.HelloRequest();
             request.setHello("hi");
             hello.test.HelloResponse response = helloPort.doHello(request);
