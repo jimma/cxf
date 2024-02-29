@@ -269,49 +269,20 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
         */
     }
 
-    /*
-     To exclude the server side profiler, starts the server in a standalone process:(execute under systests/jaxws)
-     mvn exec:java -Dexec.mainClass="org.apache.cxf.systest.jaxws.ServerMisc" -Dexec.classpathScope="test"
-     Then start the client side to run this test :
-     mvn clean install -Dtest=ClientServerMiscTest#testHelloWSTimes -Pnochecks
-     This test will check if the aysnc-profiler is started, once started it will execute the loop.
-     Finding the profiler.sh process is for MacOS, it needs to change another command if it is running on linux.
-     Start the async-profiler with :
-     ./profiler.sh -t -d 300 -f profiler.html pid
-     */
-
-    /*** This is the test result ***/
-    /*
-        CXF 4.0.4
-[INFO] Running org.apache.cxf.systest.jaxws.ClientServerMiscTest
-CatalogManager.properties: catalogs not found.
-CatalogManager.properties: catalogs not found.
-Invoke count 50000
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 196.1 s -- in org.apache.cxf.systest.jaxws.ClientServerMiscTest
-[INFO]
-[INFO] Results:
-[INFO]
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
-[INFO]
-
-
-CXF 4.0.0
-[INFO] Running org.apache.cxf.systest.jaxws.ClientServerMiscTest
-Invoke count 50000
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 72.502 s - in org.apache.cxf.systest.jaxws.ClientServerMiscTest
-[INFO]
-[INFO] Results:
-[INFO]
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
-[INFO]
-[INFO]
-[INFO] --- jar:3.3.0:jar (default-jar) @ cxf-systests-jaxws ---
-[INFO] Building jar: /Users/jimma/data/code/cxf/systests/jaxws/target/cxf-systests-jaxws-4.0.0.jar
-     */
+    //This test for jprofiler
+    //The server side is changed to use wiremock to isolate the server response impact
+    //Start wiremock with : java -jar wiremock-standalone-3.4.1.jar
+    //Configure wiremock response :
+    //curl -X POST \
+    //--data '{ "request": { "url": "/hellows/", "method": "POST" }, "response": { "status": 200, "body": "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><ns5:doHelloResponse xmlns:ns5=\"http://hello/test\"><return><multiHello>hi</multiHello><multiHello>world</multiHello></return></ns5:doHelloResponse></soap:Body></soap:Envelope>"}}' \
+    //http://localhost:9001/__admin/mappings
+    //jprofiler has the trigger method:
+    // (new TestClient(wsdlURL)).triggerMethod();
+    //It's meaningless and only for triggering the recording action
 
     @Test
     public void testHelloWSTimes() throws Exception {
-       /* OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+        /* OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
         Thread.sleep(1000*20);*/
         if (System.getProperty("profiler") != null) {
             int result = -1;
@@ -362,7 +333,7 @@ Invoke count 50000
         };
 
         int count = 0;
-        URL wsdlURL = new URL("http://localhost:9001/hellows/?wsdl");
+        URL wsdlURL = new URL("file:///Users/jimma/tmp/hello.wsdl");
         QName qname = new QName("http://hello/test", "HelloService");
         /*Service service = Service.create(wsdlURL, qname);
         hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
@@ -371,7 +342,7 @@ Invoke count 50000
 
 
         //warm up with 100 times
-        for (int time =0 ; time < 100; time++) {
+        for (int time =0 ; time < 300; time++) {
 
             /*hello.test.HelloResponse response = helloPort.doHello(request);
             if(response.getMultiHello().contains("hi")) {
@@ -401,6 +372,8 @@ Invoke count 50000
         }
 
         count = 0;
+        //Jprofiler trigger action method
+        (new TestClient(wsdlURL)).triggerMethod();
         long start = System.currentTimeMillis();
         for (int time =0 ; time < 300; time++) {
 
@@ -430,8 +403,7 @@ Invoke count 50000
                 es.shutdown();
             }
         }
-        System.out.println("Invoke count " + count + " Time: " + (System.currentTimeMillis() - start));
-
+        System.out.println("Call count:" + count + " Time:" + (System.currentTimeMillis() - start));
     }
     public class TestClient implements Callable<Boolean>
     {
@@ -454,10 +426,11 @@ Invoke count 50000
             return response.getMultiHello().contains("hi");
         }
 
+        public void triggerMethod() {
+            System.out.println("Trigger the jprofiler");
+        }
+
     }
-
-
-
         @Test
     public void testAnonymousComplexType() throws Exception {
 
