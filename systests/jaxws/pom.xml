@@ -297,6 +297,11 @@
             <version>${cxf.jacorb.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>tools.profiler</groupId>
+            <artifactId>async-profiler</artifactId>
+            <version>3.0</version>
+        </dependency>
     </dependencies>
     <profiles>
         <profile>

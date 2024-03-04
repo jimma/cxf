@@ -22,6 +22,7 @@ package org.apache.cxf.systest.jaxws;
 import com.sun.management.UnixOperatingSystemMXBean;
 import jakarta.xml.ws.WebServiceFeature;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -53,6 +54,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
 
+import one.profiler.AsyncProfiler;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -269,75 +271,19 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
         */
     }
 
-    /*
-     To exclude the server side profiler, starts the server in a standalone process:(execute under systests/jaxws)
-     mvn exec:java -Dexec.mainClass="org.apache.cxf.systest.jaxws.ServerMisc" -Dexec.classpathScope="test"
-     Then start the client side to run this test :
-     mvn clean install -Dtest=ClientServerMiscTest#testHelloWSTimes -Pnochecks
-     This test will check if the aysnc-profiler is started, once started it will execute the loop.
-     Finding the profiler.sh process is for MacOS, it needs to change another command if it is running on linux.
-     Start the async-profiler with :
-     ./profiler.sh -t -d 300 -f profiler.html pid
-     */
-
-    /*** This is the test result ***/
-    /*
-        CXF 4.0.4
-[INFO] Running org.apache.cxf.systest.jaxws.ClientServerMiscTest
-CatalogManager.properties: catalogs not found.
-CatalogManager.properties: catalogs not found.
-Invoke count 50000
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 196.1 s -- in org.apache.cxf.systest.jaxws.ClientServerMiscTest
-[INFO]
-[INFO] Results:
-[INFO]
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
-[INFO]
-
-
-CXF 4.0.0
-[INFO] Running org.apache.cxf.systest.jaxws.ClientServerMiscTest
-Invoke count 50000
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 72.502 s - in org.apache.cxf.systest.jaxws.ClientServerMiscTest
-[INFO]
-[INFO] Results:
-[INFO]
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
-[INFO]
-[INFO]
-[INFO] --- jar:3.3.0:jar (default-jar) @ cxf-systests-jaxws ---
-[INFO] Building jar: /Users/jimma/data/code/cxf/systests/jaxws/target/cxf-systests-jaxws-4.0.0.jar
-     */
+    //This test for jprofiler
+    //The server side is changed to use wiremock to isolate the server response impact
+    //Start wiremock with :  java -jar wiremock-standalone-3.4.1.jar --port 9001
+    //Configure wiremock response :
+    //curl -X POST \
+    //--data '{ "request": { "url": "/hellows/", "method": "POST" }, "response": { "status": 200, "body": "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><ns5:doHelloResponse xmlns:ns5=\"http://hello/test\"><return><multiHello>hi</multiHello><multiHello>world</multiHello></return></ns5:doHelloResponse></soap:Body></soap:Envelope>"}}' \
+    //http://localhost:9001/__admin/mappings
+    //jprofiler has the trigger method:
+    // (new TestClient(wsdlURL)).triggerMethod();
+    //It's meaningless and only for triggering the recording action
 
     @Test
     public void testHelloWSTimes() throws Exception {
-       /* OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
-        Thread.sleep(1000*20);*/
-        if (System.getProperty("profiler") != null) {
-            int result = -1;
-            do {
-                try {
-                    Process process = Runtime.getRuntime().exec("pgrep -f profiler.sh");
-                    process.waitFor();
-                    result = process.exitValue();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                if (result != 0) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            } while (result != 0);
-            System.out.println("profile is started");
-        }
-
-
-
         /*System.out.println("* Before test the opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
         ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
         if(os instanceof UnixOperatingSystemMXBean){
@@ -362,28 +308,17 @@ Invoke count 50000
         };
 
         int count = 0;
-        URL wsdlURL = new URL("http://localhost:9001/hellows/?wsdl");
+        File wsdlFile = new File("../../testutils/src/main/resources/wsdl/Hello.wsdl");
+        URL wsdlURL = wsdlFile.toURI().toURL();
         QName qname = new QName("http://hello/test", "HelloService");
-        /*Service service = Service.create(wsdlURL, qname);
+        Service service = Service.create(wsdlURL, qname);
         hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
-        hello.test.HelloRequest request = new hello.test.HelloRequest();
-        request.setHello("hi");*/
-
-
         //warm up with 100 times
-        for (int time =0 ; time < 100; time++) {
-
-            /*hello.test.HelloResponse response = helloPort.doHello(request);
-            if(response.getMultiHello().contains("hi")) {
-                count ++;
-            } else {
-                throw new RuntimeException("exception happens");
-            }*/
-
+        for (int time =0 ; time < 300; time++) {
             ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
             List<TestClient> clients = new ArrayList<TestClient>();
             for (int i = 0; i < 100; i++) {
-                clients.add(new TestClient(wsdlURL));
+                clients.add(new TestClient(helloPort));
             }
 
             try {
@@ -401,6 +336,9 @@ Invoke count 50000
         }
 
         count = 0;
+        AsyncProfiler profiler = AsyncProfiler.getInstance();
+        String asyncProfilerName = "4.0.0-count-30000-onlycall-" + System.currentTimeMillis();
+        profiler.execute(String.format("start,event=cpu,file=%s.html", asyncProfilerName));
         long start = System.currentTimeMillis();
         for (int time =0 ; time < 300; time++) {
 
@@ -414,7 +352,7 @@ Invoke count 50000
             ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
             List<TestClient> clients = new ArrayList<TestClient>();
             for (int i = 0; i < 100; i++) {
-                clients.add(new TestClient(wsdlURL));
+                clients.add(new TestClient(helloPort));
             }
 
             try {
@@ -430,34 +368,37 @@ Invoke count 50000
                 es.shutdown();
             }
         }
-        System.out.println("Invoke count " + count + " Time: " + (System.currentTimeMillis() - start));
-
+        System.out.println("Call count:" + count + " Time:" + (System.currentTimeMillis() - start));
+        profiler.execute(String.format("stop,file=%s.html", asyncProfilerName));
     }
     public class TestClient implements Callable<Boolean>
     {
-        public final  QName qname = new QName("http://hello/test", "HelloService");
-        public final URL wsdlURL;
+        public final hello.test.HelloService helloPort;
 
-        public TestClient(final URL wsdlURL)
+        public TestClient(final hello.test.HelloService helloPort)
         {
-            this.wsdlURL = wsdlURL;
+            this.helloPort = helloPort;
+
+
         }
         @Override
         public Boolean call() throws Exception
         {
-            Service service = Service.create(wsdlURL, qname);
-            hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
-
             hello.test.HelloRequest request = new hello.test.HelloRequest();
             request.setHello("hi");
             hello.test.HelloResponse response = helloPort.doHello(request);
             return response.getMultiHello().contains("hi");
         }
 
+        public void triggerMethod() {
+            System.out.println("Start recording for the jprofiler");
+        }
+
+        public void endtriggerMethod() {
+            System.out.println("Stop recording for the jprofiler");
+        }
+
     }
-
-
-
         @Test
     public void testAnonymousComplexType() throws Exception {
 
