@@ -39,7 +39,7 @@
   </wsdl:binding>
   <wsdl:service name="HelloService">
     <wsdl:port name="HelloServicePort" binding="tns:HelloServiceSoapBinding">
-      <soap:address location="http://localhost:9090/HelloServicePort"/>
+      <soap:address location="http://localhost:9001/hellows/"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>

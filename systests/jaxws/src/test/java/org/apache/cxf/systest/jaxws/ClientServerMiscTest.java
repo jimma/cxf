@@ -22,6 +22,7 @@ package org.apache.cxf.systest.jaxws;
 import com.sun.management.UnixOperatingSystemMXBean;
 import jakarta.xml.ws.WebServiceFeature;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -52,6 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathConstants;
 
+import one.profiler.AsyncProfiler;
 import org.apache.cxf.BusFactory;
 //import org.apache.cxf.transport.http.asyncclient.hc5.AsyncHTTPConduit;
 //import org.apache.cxf.transport.http.asyncclient.hc5.AsyncHTTPConduitFactory;
@@ -271,36 +273,19 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
         assertEquals(gm.getValue().getMonth(), gm2.getValue().getMonth());
         */
     }
+    //This test for jprofiler
+    //The server side is changed to use wiremock to isolate the server response impact
+    //Start wiremock with : java -jar wiremock-standalone-3.4.1.jar
+    //Configure wiremock response :
+    //curl -X POST \
+    //--data '{ "request": { "url": "/hellows/", "method": "POST" }, "response": { "status": 200, "body": "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><ns5:doHelloResponse xmlns:ns5=\"http://hello/test\"><return><multiHello>hi</multiHello><multiHello>world</multiHello></return></ns5:doHelloResponse></soap:Body></soap:Envelope>"}}' \
+    //http://localhost:9001/__admin/mappings
+    //jprofiler has the trigger method:
+    // (new TestClient(wsdlURL)).triggerMethod();
+    //It's meaningless and only for triggering the recording action
 
     @Test
     public void testHelloWSTimes() throws Exception {
-        /* OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
-        Thread.sleep(1000*20);*/
-        if (System.getProperty("profiler") != null) {
-            int result = -1;
-            do {
-                try {
-                    Process process = Runtime.getRuntime().exec("pgrep -f profiler.sh");
-                    process.waitFor();
-                    result = process.exitValue();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                if (result != 0) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            } while (result != 0);
-            System.out.println("profile is started");
-        }
-
-
-
         /*System.out.println("* Before test the opened files count :" + ((UnixOperatingSystemMXBean)os).getOpenFileDescriptorCount());
         ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor();
         if(os instanceof UnixOperatingSystemMXBean){
@@ -325,59 +310,20 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
         };
 
         int count = 0;
-        URL wsdlURL = new URL("http://localhost:9001/hellows/?wsdl");
+        File wsdlFile = new File("../../testutils/src/main/resources/wsdl/Hello.wsdl");
+        URL wsdlURL = wsdlFile.toURI().toURL();
         QName qname = new QName("http://hello/test", "HelloService");
-        /*Service service = Service.create(wsdlURL, qname);
+        Service service = Service.create(wsdlURL, qname);
         hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
-        hello.test.HelloRequest request = new hello.test.HelloRequest();
-        request.setHello("hi");*/
 
 
         //warm up with 100 times
-        for (int time =0 ; time < 100; time++) {
-
-            /*hello.test.HelloResponse response = helloPort.doHello(request);
-            if(response.getMultiHello().contains("hi")) {
-                count ++;
-            } else {
-                throw new RuntimeException("exception happens");
-            }*/
-
-            ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
-            List<TestClient> clients = new ArrayList<TestClient>();
-            for (int i = 0; i < 100; i++) {
-                clients.add(new TestClient(wsdlURL));
-            }
-
-            try {
-                List<Future<Boolean>> futures = es.invokeAll(clients);
-                for (Future<Boolean> f : futures) {
-                    if (f.get()) {
-                        count++;
-                    }
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            } finally {
-                es.shutdown();
-            }
-        }
-
-        count = 0;
-        long start = System.currentTimeMillis();
         for (int time =0 ; time < 300; time++) {
 
-            /*hello.test.HelloResponse response = helloPort.doHello(request);
-            if(response.getMultiHello().contains("hi")) {
-                count ++;
-            } else {
-                throw new RuntimeException("exception happens");
-            }*/
-
             ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
             List<TestClient> clients = new ArrayList<TestClient>();
             for (int i = 0; i < 100; i++) {
-                clients.add(new TestClient(wsdlURL));
+                clients.add(new TestClient(helloPort));
             }
 
             try {
@@ -393,29 +339,53 @@ public class ClientServerMiscTest extends AbstractBusClientServerTestBase {
                 es.shutdown();
             }
         }
-        System.out.println("Invoke count " + count + " Time: " + (System.currentTimeMillis() - start));
+        AsyncProfiler profiler = AsyncProfiler.getInstance();
+        count = 0;
+        String asyncProfilerName = "4.0.4-count-30000-onlycall-"+ System.currentTimeMillis();
+        profiler.execute(String.format("start,event=cpu,file=%s.html", asyncProfilerName));
+        long start = System.currentTimeMillis();
+        for (int time =0 ; time < 300; time++) {
+            ExecutorService es = Executors.newFixedThreadPool(10, threadFactory);
+            List<TestClient> clients = new ArrayList<TestClient>();
+            for (int i = 0; i < 100; i++) {
+                clients.add(new TestClient(helloPort));
+            }
+
+            try {
+                List<Future<Boolean>> futures = es.invokeAll(clients);
+                for (Future<Boolean> f : futures) {
+                    if (f.get()) {
+                        count++;
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                es.shutdown();
+            }
+        }
+        System.out.println("Call count:" + count + " Time:" + (System.currentTimeMillis() - start));
+        profiler.execute(String.format("stop,file=%s.html", asyncProfilerName));
+
     }
     public class TestClient implements Callable<Boolean>
     {
-        public final  QName qname = new QName("http://hello/test", "HelloService");
-        public final URL wsdlURL;
+        public final hello.test.HelloService helloPort;
 
-        public TestClient(final URL wsdlURL)
+        public TestClient(final hello.test.HelloService helloPort)
         {
-            this.wsdlURL = wsdlURL;
+            this.helloPort = helloPort;
+
+
         }
         @Override
         public Boolean call() throws Exception
         {
-            Service service = Service.create(wsdlURL, qname);
-            hello.test.HelloService helloPort = service.getPort(hello.test.HelloService.class);
-
             hello.test.HelloRequest request = new hello.test.HelloRequest();
             request.setHello("hi");
             hello.test.HelloResponse response = helloPort.doHello(request);
             return response.getMultiHello().contains("hi");
         }
-
     }
 
 
