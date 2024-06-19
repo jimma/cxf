@@ -471,7 +471,9 @@ public class JAXBDataBinding extends AbstractInterceptorProvidingDataBinding
 
     // default access for tests.
     List<DOMResult> generateJaxbSchemas() throws IOException {
-        return JAXBUtils.generateJaxbSchemas(context, BUILT_IN_SCHEMAS);
+        synchronized (this) {
+            return JAXBUtils.generateJaxbSchemas(context, BUILT_IN_SCHEMAS);
+        }
     }
 
     public JAXBContext createJAXBContext(Set<Class<?>> classes) throws JAXBException {
