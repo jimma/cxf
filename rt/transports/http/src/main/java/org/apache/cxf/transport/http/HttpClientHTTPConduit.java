@@ -18,6 +18,9 @@
  */
 package org.apache.cxf.transport.http;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -138,9 +141,9 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
                             AccessController.doPrivileged((PrivilegedExceptionAction<Void>) () -> {
                                 try {
                                     MethodHandles.publicLookup()
-                                        .findVirtual(HttpClient.class, "shutdownNow", MethodType.methodType(void.class))
-                                        .bindTo(client)
-                                        .invokeExact();
+                                            .findVirtual(HttpClient.class, "shutdownNow", MethodType.methodType(void.class))
+                                            .bindTo(client)
+                                            .invokeExact();
                                     return null;
                                 } catch (final Throwable ex) {
                                     if (ex instanceof Error) {
@@ -185,7 +188,7 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
         private final ReentrantLock lock = new ReentrantLock();
 
         RefCount<HttpClient> computeIfAbsent(final boolean shareHttpClient, final HTTPClientPolicy policy,
-                final TLSClientParameters clientParameters, final Supplier<HttpClient> supplier) {
+                                             final TLSClientParameters clientParameters, final Supplier<HttpClient> supplier) {
 
             // Do not share if it is not allowed for the conduit or cache capacity is exceeded
             if (!shareHttpClient || clients.size() >= MAX_SIZE) {
@@ -246,15 +249,6 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
 
     @Override
     public void close(Message msg) throws IOException {
-        try {
-            OutputStream os = msg.getContent(OutputStream.class);
-            // Java 21 may hang on close, we flush stream to help close them out.
-            if (os != null && AutoCloseable.class.isAssignableFrom(HttpClient.class)) {
-                os.flush();
-            }
-        } catch (IOException ioException) {
-            // ignore
-        }
         super.close(msg);
         msg.remove(HttpClient.class);
     }
@@ -334,7 +328,7 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
                     o = Boolean.TRUE;
                 }
                 if (clientParameters.getTrustManagers() != null
-                    && JavaUtils.getJavaMajorVersion() < 14) {
+                        && JavaUtils.getJavaMajorVersion() < 14) {
                     // trustmanagers hacks don't work on Java11
                     o = Boolean.TRUE;
                 }
@@ -355,7 +349,7 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
         }
         // If the HTTP_REQUEST_METHOD is not set, the default is "POST".
         String httpRequestMethod =
-            (String)message.get(Message.HTTP_REQUEST_METHOD);
+                (String)message.get(Message.HTTP_REQUEST_METHOD);
         if (httpRequestMethod == null) {
             httpRequestMethod = "POST";
             message.put(Message.HTTP_REQUEST_METHOD, "POST");
@@ -367,8 +361,8 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
             ProxySelector ps = new ProxyFactoryProxySelector(proxyFactory, csPolicy);
 
             HttpClient.Builder cb = HttpClient.newBuilder()
-                .proxy(ps)
-                .followRedirects(Redirect.NEVER);
+                    .proxy(ps)
+                    .followRedirects(Redirect.NEVER);
 
             if (ctimeout > 0) {
                 cb.connectTimeout(Duration.ofMillis(ctimeout));
@@ -387,10 +381,10 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
                                 .getSupportedCipherSuites(sslContext);
                         String[] cipherSuites = org.apache.cxf.configuration.jsse.SSLUtils
                                 .getCiphersuitesToInclude(clientParameters.getCipherSuites(),
-                                                          clientParameters.getCipherSuitesFilter(),
-                                                          sslContext.getSocketFactory().getDefaultCipherSuites(),
-                                                          supportedCiphers,
-                                                          LOG);
+                                        clientParameters.getCipherSuitesFilter(),
+                                        sslContext.getSocketFactory().getDefaultCipherSuites(),
+                                        supportedCiphers,
+                                        LOG);
 
                         if (clientParameters.getSecureSocketProtocol() != null) {
                             String protocol = clientParameters.getSecureSocketProtocol();
@@ -398,7 +392,7 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
                             cb.sslParameters(params);
                         } else {
                             final SSLParameters params = new SSLParameters(cipherSuites,
-                                TLSClientParameters.getPreferredClientProtocols());
+                                    TLSClientParameters.getPreferredClientProtocols());
                             cb.sslParameters(params);
                         }
                     }
@@ -420,13 +414,13 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
                 cl = clientRef;
                 if (cl == null) {
                     final boolean shareHttpClient = MessageUtils.getContextualBoolean(message,
-                        SHARE_HTTPCLIENT_CONDUIT, true);
+                            SHARE_HTTPCLIENT_CONDUIT, true);
                     cl = CLIENTS_CACHE.computeIfAbsent(shareHttpClient, csPolicy, clientParameters, () -> cb.build());
 
                     if (!"https".equals(uri.getScheme())
-                        && !KNOWN_HTTP_VERBS_WITH_NO_CONTENT.contains(httpRequestMethod)
-                        && cl.client().version() == Version.HTTP_2
-                        && ("2".equals(verc) || ("auto".equals(verc) && "2".equals(HTTP_VERSION)))) {
+                            && !KNOWN_HTTP_VERBS_WITH_NO_CONTENT.contains(httpRequestMethod)
+                            && cl.client().version() == Version.HTTP_2
+                            && ("2".equals(verc) || ("auto".equals(verc) && "2".equals(HTTP_VERSION)))) {
                         try {
                             // We specifically want HTTP2, but we're using a request
                             // that won't trigger an upgrade to HTTP/2 so we'll
@@ -434,8 +428,8 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
                             // Not needed for methods that don't have a body (GET/HEAD/etc...)
                             // or for https (negotiated at the TLS level)
                             HttpRequest.Builder rb = HttpRequest.newBuilder()
-                                .uri(uri)
-                                .method("OPTIONS", BodyPublishers.noBody());
+                                    .uri(uri)
+                                    .method("OPTIONS", BodyPublishers.noBody());
                             cl.client().send(rb.build(), BodyHandlers.ofByteArray());
                         } catch (IOException | InterruptedException e) {
                             //
@@ -456,17 +450,17 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
     @Override
     protected OutputStream createOutputStream(Message message, boolean needToCacheRequest, boolean isChunking,
                                               int chunkThreshold)
-        throws IOException {
+            throws IOException {
 
         Object o = message.get("USING_URLCONNECTION");
         if (Boolean.TRUE == o) {
             return super.createOutputStream(message, needToCacheRequest, isChunking, chunkThreshold);
         }
         return new HttpClientWrappedOutputStream(message,
-                                                 needToCacheRequest,
-                                                 isChunking,
-                                                 chunkThreshold,
-                                                 getConduitName());
+                needToCacheRequest,
+                isChunking,
+                chunkThreshold,
+                getConduitName());
     }
 
 
@@ -516,11 +510,11 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
     static class HttpClientPipedOutputStream extends PipedOutputStream {
         HttpClientWrappedOutputStream stream;
         HTTPClientPolicy csPolicy;
-        HttpClientBodyPublisher publisher;
+        CloseableBodyPublisher publisher;
         HttpClientPipedOutputStream(HttpClientWrappedOutputStream s,
                                     PipedInputStream pin,
                                     HTTPClientPolicy cp,
-                                    HttpClientBodyPublisher bp) throws IOException {
+                                    CloseableBodyPublisher bp) throws IOException {
             super(pin);
             stream = s;
             csPolicy = cp;
@@ -591,26 +585,27 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
             }
         }
     }
-    private static final class InputStreamSupplier implements Supplier<InputStream> {
-        final InputStream in;
-        InputStreamSupplier(InputStream i) {
-            in = i;
-        }
 
-        public InputStream get() {
-            return in;
-        }
+    /**
+     * The interface for {@link BodyPublisher}s that implement {@link Closeable} as well.
+     */
+    private interface CloseableBodyPublisher extends BodyPublisher, Closeable {
     }
-    private static final class HttpClientBodyPublisher implements BodyPublisher {
-        PipedInputStream pin;
-        HttpClientWrappedOutputStream  stream;
-        long contentLen;
 
-        private HttpClientBodyPublisher(HttpClientWrappedOutputStream s, PipedInputStream pin) {
+    /**
+     * The {@link BodyPublisher} that wraps around the output stream.
+     */
+    private static final class HttpClientBodyPublisher implements CloseableBodyPublisher {
+        private Supplier<InputStream> pin;
+        private HttpClientWrappedOutputStream stream;
+        private long contentLen;
+
+        private HttpClientBodyPublisher(HttpClientWrappedOutputStream s, Supplier<InputStream> pin) {
             this.stream = s;
             this.pin = pin;
         }
-        synchronized void close() {
+
+        public synchronized void close() {
             if (stream != null) {
                 contentLen = stream.contentLen;
                 stream = null;
@@ -629,7 +624,7 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
                     if (stream != null) {
                         contentLen = stream.contentLen;
                     }
-                    BodyPublishers.ofInputStream(new InputStreamSupplier(pin)).subscribe(subscriber);
+                    BodyPublishers.ofInputStream(pin).subscribe(subscriber);
                     stream = null;
                     pin = null;
                     return;
@@ -646,6 +641,154 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
             return contentLen;
         }
     }
+
+    /**
+     * The {@link BodyPublisher} that awaits for the output stream to be fully flushed (closed)
+     * so the content length becomes known (sized). It is used when the chunked transfer is not allowed
+     * but the content length is not specified up-front.
+     */
+    private static final class HttpClientSizedBodyPublisher implements CloseableBodyPublisher {
+        private HTTPClientPolicy csPolicy;
+        private Supplier<ByteArrayInputStream> pin;
+        private HttpClientWrappedOutputStream stream;
+        private long contentLen;
+
+        private HttpClientSizedBodyPublisher(HttpClientWrappedOutputStream s, HTTPClientPolicy cs,
+                                             Supplier<ByteArrayInputStream> pin) {
+            this.stream = s;
+            this.csPolicy = cs;
+            this.pin = pin;
+        }
+
+        public synchronized void close() {
+            if (stream != null) {
+                contentLen = stream.contentLen;
+                stream = null;
+            }
+        }
+
+        @Override
+        public synchronized void subscribe(Subscriber<? super ByteBuffer> subscriber) {
+            if (stream != null) {
+                stream.connectionComplete = true;
+                if (stream.pout != null) {
+                    synchronized (stream.pout) {
+                        stream.pout.notifyAll();
+                    }
+
+                    BodyPublishers.ofInputStream(pin).subscribe(subscriber);
+                    stream = null;
+                    pin = null;
+                    return;
+                }
+            }
+            BodyPublishers.noBody().subscribe(subscriber);
+        }
+
+        @Override
+        public long contentLength() {
+            if (stream != null && stream.pout != null) {
+                final CloseableByteArrayOutputStream baos = (CloseableByteArrayOutputStream) stream.pout;
+
+                try {
+                    synchronized (baos) {
+                        if (!baos.closed) {
+                            baos.wait(csPolicy.getConnectionTimeout());
+                        }
+                    }
+                    contentLen = (int) baos.size();
+                } catch (InterruptedException e) {
+                    //ignore
+                }
+            }
+
+            return contentLen;
+        }
+    }
+
+    /**
+     * The {@link ByteArrayOutputStream} implementation that tracks the closeability state.
+     */
+    private static final class CloseableByteArrayOutputStream extends ByteArrayOutputStream {
+        private boolean closed;
+
+        /**
+         * Creates a new output stream for user data
+         */
+        CloseableByteArrayOutputStream() {
+            super(4096);
+        }
+
+        /**
+         * Writes the specified byte to this output stream.
+         *
+         * @param   b   the byte to be written.
+         */
+        public synchronized void write(int b) {
+            if (closed) {
+                return;
+            }
+            super.write(b);
+        }
+
+        /**
+         * Writes <code>len</code> bytes from the specified byte array
+         * starting at offset <code>off</code> to this output stream.
+         *
+         * @param   b     the data.
+         * @param   off   the start offset in the data.
+         * @param   len   the number of bytes to write.
+         */
+        public synchronized void write(byte[] b, int off, int len) {
+            if (closed) {
+                return;
+            }
+            super.write(b, off, len);
+        }
+
+        /**
+         * Resets the <code>count</code> field of this output
+         * stream to zero, so that all currently accumulated output in the
+         * output stream is discarded. The output stream can be used again,
+         * reusing the already allocated buffer space. If the output stream
+         * has been closed, then this method has no effect.
+         *
+         * @see     java.io.ByteArrayInputStream#count
+         */
+        public synchronized void reset() {
+            if (closed) {
+                return;
+            }
+            super.reset();
+        }
+
+        /**
+         * After close() has been called, it is no longer possible to write
+         * to this stream. Further calls to write will have no effect.
+         */
+        public synchronized void close() throws IOException {
+            closed = true;
+            super.close();
+            notifyAll();
+        }
+
+        /**
+         * Returns new instance of the {@link ByteArrayInputStream} that uses the same underlying buffer as
+         * this stream. The steam must be closed in order to ensure no further modifications could happen.
+         * @return new instance of the {@link ByteArrayInputStream}
+         */
+        public ByteArrayInputStream getInputStream() {
+            if (!closed) {
+                throw new IllegalStateException("The stream is not closed and underlying buffer "
+                        + "could still be changed");
+            }
+
+            // Creates new ByteArrayInputStream instance that respects the current state of the buffer
+            // (since ByteArrayInputStream::toByteArray() does array copy).
+            return new ByteArrayInputStream(this.buf, 0, this.count);
+        }
+    }
+
     class HttpClientWrappedOutputStream extends WrappedOutputStream {
 
         List<Flow.Subscriber<? super ByteBuffer>> subscribers = new LinkedList<>();
@@ -654,8 +797,8 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
         int rtimeout;
         volatile Throwable exception;
         volatile boolean connectionComplete;
-        PipedOutputStream pout;
-        HttpClientBodyPublisher publisher;
+        OutputStream pout;
+        CloseableBodyPublisher publisher;
         HttpRequest request;
 
 
@@ -663,7 +806,7 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
                                       boolean needToCacheRequest, boolean isChunking,
                                       int chunkThreshold, String conduitName) {
             super(message, needToCacheRequest, isChunking,
-                  chunkThreshold, conduitName, ((Address)message.get(KEY_HTTP_CONNECTION_ADDRESS)).getURI());
+                    chunkThreshold, conduitName, ((Address)message.get(KEY_HTTP_CONNECTION_ADDRESS)).getURI());
         }
 
         @Override
@@ -736,7 +879,7 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
                 // If it is an empty request (without a request body) then check further if CT still needs be set
                 if (emptyRequest) {
                     final Object setCtForEmptyRequestProp = outMessage
-                        .getContextualProperty(Headers.SET_EMPTY_REQUEST_CT_PROPERTY);
+                            .getContextualProperty(Headers.SET_EMPTY_REQUEST_CT_PROPERTY);
                     if (setCtForEmptyRequestProp != null) {
                         // If SET_EMPTY_REQUEST_CT_PROPERTY is set then do as a user prefers.
                         // CT will be dropped if setting CT for empty requests was explicitly disabled
@@ -751,7 +894,7 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
         }
 
         private boolean isConnectionAttemptCompleted(HTTPClientPolicy csPolicy, PipedOutputStream out)
-            throws IOException {
+                throws IOException {
             if (!connectionComplete) {
                 // if we haven't connected yet, we'll see if an exception is the reason
                 // why we haven't connected.  Otherwise, wait for the connection
@@ -792,24 +935,32 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
             Address address = (Address)outMessage.get(KEY_HTTP_CONNECTION_ADDRESS);
             final HTTPClientPolicy csPolicy = getClient(outMessage);
             String httpRequestMethod =
-                (String)outMessage.get(Message.HTTP_REQUEST_METHOD);
+                    (String)outMessage.get(Message.HTTP_REQUEST_METHOD);
 
 
             if (KNOWN_HTTP_VERBS_WITH_NO_CONTENT.contains(httpRequestMethod)
-                || PropertyUtils.isTrue(outMessage.get(Headers.EMPTY_REQUEST_PROPERTY))) {
+                    || PropertyUtils.isTrue(outMessage.get(Headers.EMPTY_REQUEST_PROPERTY))) {
                 contentLen = 0;
             }
 
-            final PipedInputStream pin = new PipedInputStream(csPolicy.getChunkLength() <= 0
-                ? 4096 : csPolicy.getChunkLength());
-
-            this.publisher = new HttpClientBodyPublisher(this, pin);
-            if (contentLen != 0) {
-                pout = new HttpClientPipedOutputStream(this, pin, csPolicy, publisher);
+            if (csPolicy.isAllowChunking() || contentLen >= 0) {
+                final PipedInputStream pin = new PipedInputStream(csPolicy.getChunkLength() <= 0
+                        ? 4096 : csPolicy.getChunkLength());
+                this.publisher = new HttpClientBodyPublisher(this, () -> pin);
+                if (contentLen != 0) {
+                    pout = new HttpClientPipedOutputStream(this, pin, csPolicy, publisher);
+                }
+            } else if (contentLen != 0) {
+                // If chunking is not allowed but the contentLen is unknown (-1), we need to
+                // buffer the request body stream until it is fully flushed by the client and only
+                // than send the request.
+                final CloseableByteArrayOutputStream baos = new CloseableByteArrayOutputStream();
+                this.publisher = new HttpClientSizedBodyPublisher(this, csPolicy, baos::getInputStream);
+                pout = baos;
             }
 
             HttpRequest.Builder rb = HttpRequest.newBuilder()
-                .method(httpRequestMethod, publisher);
+                    .method(httpRequestMethod, publisher);
             String verc = (String)outMessage.getContextualProperty(FORCE_HTTP_VERSION);
             if (verc == null) {
                 verc = csPolicy.getVersion();
@@ -864,7 +1015,7 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
         protected void setupWrappedStream() throws IOException {
             if (cachingForRetransmission) {
                 cachedStream =
-                    new CacheAndWriteOutputStream(pout);
+                        new CacheAndWriteOutputStream(pout);
                 wrappedStream = cachedStream;
             } else {
                 wrappedStream = pout;
@@ -1007,16 +1158,16 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
                 // returns from the HTTPUrlConnection
                 HttpResponse<InputStream> in = getResponse();
                 switch (in.statusCode()) {
-                case 404:
-                    return "Not Found";
-                case 405:
-                    return "Method Not Allowed";
-                case 503:
-                    return "Service Unavailable";
-                case 200:
-                    return "OK";
-                default:
-                    return in.toString();
+                    case 404:
+                        return "Not Found";
+                    case 405:
+                        return "Method Not Allowed";
+                    case 503:
+                        return "Service Unavailable";
+                    case 200:
+                        return "OK";
+                    default:
+                        return in.toString();
                 }
             } catch (IOException e) {
                 //ignore
@@ -1047,8 +1198,8 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
             Principal peer = session.getPeerPrincipal();
 
             HttpsURLConnectionInfo info = new HttpsURLConnectionInfo(uri, method, cipherSuite,
-                                                                     localCerts, principal,
-                                                                     serverCerts, peer);
+                    localCerts, principal,
+                    serverCerts, peer);
 
             return info;
         }
@@ -1067,10 +1218,10 @@ public class HttpClientHTTPConduit extends URLConnectionHTTPConduit {
             HttpResponse<InputStream> rsp = getResponse();
             int responseCode = rsp.statusCode();
             if (responseCode == HttpURLConnection.HTTP_ACCEPTED
-                || responseCode == HttpURLConnection.HTTP_OK) {
+                    || responseCode == HttpURLConnection.HTTP_OK) {
                 try {
                     PushbackInputStream pbin =
-                        new PushbackInputStream(rsp.body());
+                            new PushbackInputStream(rsp.body());
                     int c = pbin.read();
                     if (c != -1) {
                         pbin.unread((byte)c);
