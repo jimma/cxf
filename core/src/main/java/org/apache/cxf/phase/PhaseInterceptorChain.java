@@ -288,10 +288,11 @@ public class PhaseInterceptorChain implements InterceptorChain {
      */
     @SuppressWarnings("unchecked")
     public boolean doIntercept(Message message) {
+        Message oldMessage = null;
         try {
             lock.lock();
             updateIterator();
-            Message oldMessage = CURRENT_MESSAGE.get();
+            oldMessage = CURRENT_MESSAGE.get();
             CURRENT_MESSAGE.set(message);
             if (oldMessage != null
                 && !message.containsKey(PREVIOUS_MESSAGE)
