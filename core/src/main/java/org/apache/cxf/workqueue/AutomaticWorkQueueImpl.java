@@ -428,7 +428,7 @@ public class AutomaticWorkQueueImpl implements AutomaticWorkQueue {
         if (addWorkerMethod != null
             && !ex.getQueue().isEmpty()
             && this.approxThreadCount.get() < highWaterMark
-            && addThreadLock.tryLock()) {
+            && addThreadlock.lock()) {
             try {
                 mainLock.lock();
                 try {

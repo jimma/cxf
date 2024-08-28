@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.wsdl.BindingInput;
 import javax.wsdl.Definition;
@@ -79,6 +80,8 @@ public class WSDLManagerImpl implements WSDLManager {
     private Bus bus;
 
     private XMLStreamReaderWrapper xmlStreamReaderWrapper;
+
+    private final ReentrantLock lock = new ReentrantLock();
 
     public WSDLManagerImpl() throws BusException {
         this(null);
@@ -157,15 +160,15 @@ public class WSDLManagerImpl implements WSDLManager {
     }
 
     public Definition getDefinition(String url) throws WSDLException {
-        synchronized (definitionsMap) {
-            if (definitionsMap.containsKey(url)) {
-                return definitionsMap.get(url);
-            }
+        lock.lock();
+        if (definitionsMap.containsKey(url)) {
+            return definitionsMap.get(url);
         }
+        lock.unlock();
         Definition def = loadDefinition(url);
-        synchronized (definitionsMap) {
-            definitionsMap.put(url, def);
-        }
+        lock.lock();
+        definitionsMap.put(url, def);
+        lock.unlock();
         return def;
     }
 

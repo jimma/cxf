@@ -20,6 +20,7 @@
 package org.apache.cxf.ws.security.trust;
 
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,8 +67,11 @@ public final class STSTokenRetriever {
         }
         
         STSClient client = STSUtils.getClientWithIssuer(message, "sts", params.getIssuer());
-        synchronized (client) {
+        final ReentrantLock lock = new ReentrantLock();
+
+        //synchronized (client) {
             try {
+                lock.lock();
                 client.setMessage(message);
                 
                 // Transpose ActAs/OnBehalfOf info from original request to the STS client.
@@ -126,8 +130,9 @@ public final class STSTokenRetriever {
                 client.setTrust((Trust13)null);
                 client.setTemplate(null);
                 client.setAddressingNamespace(null);
-            }
-        }
+                lock.unlock();
+        //    }
+           }
     }
     
     private static boolean isCachedTokenFromEndpoint(Message message, Element onBehalfOfToken, Element actAsToken) {
