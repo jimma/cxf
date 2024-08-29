@@ -23,6 +23,7 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.concurrent.locks.ReentrantLock;
 import javax.xml.namespace.QName;
 
 import jakarta.xml.ws.BindingProvider;
@@ -63,6 +64,8 @@ public class JaxWsProxyFactoryBean extends ClientProxyFactoryBean {
     @SuppressWarnings("rawtypes")
     List<Handler> handlers = new ArrayList<>();
     boolean loadHandlers = true;
+
+    private final ReentrantLock lock = new ReentrantLock();
 
     public JaxWsProxyFactoryBean() {
         super(new JaxWsClientFactoryBean());
@@ -129,7 +132,8 @@ public class JaxWsProxyFactoryBean extends ClientProxyFactoryBean {
      * before making remote calls
      */
     @Override
-    public synchronized Object create() {
+    public Object create() {
+        lock.lock();
         ClassLoaderHolder orig = null;
         try {
             if (getBus() != null) {
@@ -154,6 +158,7 @@ public class JaxWsProxyFactoryBean extends ClientProxyFactoryBean {
             if (orig != null) {
                 orig.reset();
             }
+            lock.unlock();
         }
     }
 
