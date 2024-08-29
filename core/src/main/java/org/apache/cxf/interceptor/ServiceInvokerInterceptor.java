@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.message.Exchange;
@@ -41,6 +42,7 @@ import org.apache.cxf.service.invoker.Invoker;
  * the Exchange.
  */
 public class ServiceInvokerInterceptor extends AbstractPhaseInterceptor<Message> {
+    private final ReentrantLock lock = new ReentrantLock();
 
     public ServiceInvokerInterceptor() {
         super(Phase.INVOKE);
@@ -122,17 +124,18 @@ public class ServiceInvokerInterceptor extends AbstractPhaseInterceptor<Message>
                         message.put(Message.THREAD_CONTEXT_SWITCHED, true);
                     }
 
-                    synchronized (chain) {
-                        super.run();
-                    }
+                    //lock.lock();
+                    super.run();
+                    //lock.unlock();
                 }
             };
-            synchronized (chain) {
-                executor.execute(o);
-                // the task will already be done if the executor uses the current thread
-                // but the chain lock status still needs to be re-set
-                chain.releaseAndAcquireChain();
-            }
+            //lock.lock();
+            executor.execute(o);
+            // the task will already be done if the executor uses the current thread
+            // but the chain lock status still needs to be re-set
+            chain.releaseAndAcquireChain();
+            //lock.unlock();
+
             try {
                 o.get();
             } catch (InterruptedException e) {

@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import java.util.concurrent.locks.ReentrantLock;
 import javax.wsdl.Definition;
 import javax.wsdl.Import;
 import javax.wsdl.Types;
@@ -52,6 +53,7 @@ public final class SchemaUtil {
     private final Map<String, String> catalogResolved = new HashMap<>();
     private final Bus bus;
 
+    private final ReentrantLock lock = new ReentrantLock();
     public SchemaUtil(final Bus b, final Map<String, Element> s) {
         this.bus = b;
         this.schemaList = s;
@@ -105,7 +107,8 @@ public final class SchemaUtil {
                     }
                 }
                 if (schemaElem != null) {
-                    synchronized (schemaElem.getOwnerDocument()) {
+                    //lock.lock();
+                    //synchronized (schemaElem.getOwnerDocument()) {
                         for (Object prefix : def.getNamespaces().keySet()) {
                             String ns = (String)def.getNamespaces().get(prefix);
                             if ("".equals(prefix)) {
@@ -150,7 +153,8 @@ public final class SchemaUtil {
                         schemaInfo.setElement(schemaElem);
                         schemaInfos.add(schemaInfo);
                         schemaCount++;
-                    }
+                    //}
+                    //lock.unlock();
                 }
             }
         }

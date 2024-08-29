@@ -43,6 +43,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -188,6 +189,8 @@ public class ReflectionServiceFactoryBean extends org.apache.cxf.service.factory
     private String styleCache;
     private Boolean defWrappedCache;
 
+    private final ReentrantLock lock = new ReentrantLock();
+
     public ReflectionServiceFactoryBean() {
         getServiceConfigurations().add(0, new DefaultServiceConfiguration());
     }
@@ -254,7 +257,9 @@ public class ReflectionServiceFactoryBean extends org.apache.cxf.service.factory
     }
 
     @Override
-    public synchronized Service create() {
+    public Service create() {
+        //lock.lock();
+        System.out.println("ReflectionServiceFactoryBean create");
         reset();
         sendEvent(Event.START_CREATE);
         initializeServiceConfigurations();
@@ -283,6 +288,7 @@ public class ReflectionServiceFactoryBean extends org.apache.cxf.service.factory
 
         Service serv = getService();
         sendEvent(Event.END_CREATE, serv);
+        //lock.unlock();
         return serv;
     }
 

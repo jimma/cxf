@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -97,6 +98,7 @@ public class PhaseInterceptorChain implements InterceptorChain {
     // doIntercept(), which will throw same fault multi-times
     private boolean faultOccurred;
     private boolean chainReleased;
+    private final ReentrantLock lock = new ReentrantLock();
 
 
     private PhaseInterceptorChain(PhaseInterceptorChain src) {
@@ -285,11 +287,12 @@ public class PhaseInterceptorChain implements InterceptorChain {
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public synchronized boolean doIntercept(Message message) {
-        updateIterator();
-
-        Message oldMessage = CURRENT_MESSAGE.get();
+    public boolean doIntercept(Message message) {
+        Message oldMessage = null;
         try {
+            //lock.lock();
+            updateIterator();
+            oldMessage = CURRENT_MESSAGE.get();
             CURRENT_MESSAGE.set(message);
             if (oldMessage != null
                 && !message.containsKey(PREVIOUS_MESSAGE)
@@ -336,11 +339,15 @@ public class PhaseInterceptorChain implements InterceptorChain {
             if (state == State.EXECUTING) {
                 state = State.COMPLETE;
             }
+
             return state == State.COMPLETE;
         } finally {
             CURRENT_MESSAGE.set(oldMessage);
+            //lock.unlock();
         }
+
     }
+
 
     private void wrapExceptionAsFault(Message message, RuntimeException ex) {
         String description = getServiceInfo(message);
