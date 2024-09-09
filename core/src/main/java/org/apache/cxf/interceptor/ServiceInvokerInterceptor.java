@@ -19,12 +19,15 @@
 
 package org.apache.cxf.interceptor;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import java.util.concurrent.locks.ReentrantLock;
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
@@ -35,6 +38,7 @@ import org.apache.cxf.phase.Phase;
 import org.apache.cxf.phase.PhaseInterceptorChain;
 import org.apache.cxf.service.Service;
 import org.apache.cxf.service.invoker.Invoker;
+import org.w3c.dom.Document;
 
 /**
  * Invokes a Binding's invoker with the <code>INVOCATION_INPUT</code> from
@@ -42,6 +46,7 @@ import org.apache.cxf.service.invoker.Invoker;
  */
 public class ServiceInvokerInterceptor extends AbstractPhaseInterceptor<Message> {
 
+    private final ConcurrentHashMap<WeakReference<InterceptorChain>, ReentrantLock> lockMap = new ConcurrentHashMap<>();
     public ServiceInvokerInterceptor() {
         super(Phase.INVOKE);
     }
@@ -103,6 +108,7 @@ public class ServiceInvokerInterceptor extends AbstractPhaseInterceptor<Message>
             // executor thread is done
 
             final PhaseInterceptorChain chain = (PhaseInterceptorChain)message.getInterceptorChain();
+            ReentrantLock chainLock = this.lockMap.computeIfAbsent(new WeakReference<>(chain), b -> new ReentrantLock());
             final AtomicBoolean contextSwitched = new AtomicBoolean();
             final FutureTask<Object> o = new FutureTask<Object>(invocation, null) {
                 @Override
@@ -122,17 +128,17 @@ public class ServiceInvokerInterceptor extends AbstractPhaseInterceptor<Message>
                         message.put(Message.THREAD_CONTEXT_SWITCHED, true);
                     }
 
-                    synchronized (chain) {
-                        super.run();
-                    }
+                    chainLock.lock();
+                    super.run();
+                    chainLock.unlock();
                 }
             };
-            synchronized (chain) {
+                chainLock.lock();
                 executor.execute(o);
                 // the task will already be done if the executor uses the current thread
                 // but the chain lock status still needs to be re-set
                 chain.releaseAndAcquireChain();
-            }
+                chainLock.unlock();
             try {
                 o.get();
             } catch (InterruptedException e) {

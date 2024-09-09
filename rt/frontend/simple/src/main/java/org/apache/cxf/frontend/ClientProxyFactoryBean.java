@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.concurrent.locks.ReentrantLock;
 import javax.xml.namespace.QName;
 
 import org.apache.cxf.Bus;
@@ -69,6 +70,8 @@ public class ClientProxyFactoryBean extends AbstractBasicInterceptorProvider {
     private Bus bus;
     private List<Feature> features = new ArrayList<>();
     private DataBinding dataBinding;
+
+    private final ReentrantLock lock = new ReentrantLock();
 
     public ClientProxyFactoryBean() {
         this(new ClientFactoryBean());
@@ -122,7 +125,8 @@ public class ClientProxyFactoryBean extends AbstractBasicInterceptorProvider {
      *
      * @return the proxy. You must cast the returned object to the appropriate class before using it.
      */
-    public synchronized Object create() {
+    public Object create() {
+        lock.lock();
         ClassLoaderHolder orig = null;
         try {
             if (getBus() != null) {
@@ -183,6 +187,7 @@ public class ClientProxyFactoryBean extends AbstractBasicInterceptorProvider {
             if (orig != null) {
                 orig.reset();
             }
+            lock.unlock();
         }
     }
 

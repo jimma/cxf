@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import java.util.concurrent.locks.ReentrantLock;
 import javax.wsdl.BindingInput;
 import javax.wsdl.Definition;
 import javax.wsdl.Types;
@@ -79,6 +80,7 @@ public class WSDLManagerImpl implements WSDLManager {
     private Bus bus;
 
     private XMLStreamReaderWrapper xmlStreamReaderWrapper;
+    private ReentrantLock lock = new ReentrantLock();
 
     public WSDLManagerImpl() throws BusException {
         this(null);
@@ -143,9 +145,12 @@ public class WSDLManagerImpl implements WSDLManager {
     }
 
     public Map<Object, Definition> getDefinitions() {
-        synchronized (definitionsMap) {
-            return Collections.unmodifiableMap(definitionsMap);
-        }
+        //synchronized (definitionsMap) {
+        lock.lock();
+        Map<Object, Definition> map = Collections.unmodifiableMap(definitionsMap);
+        lock.unlock();
+        return map;
+        //}
     }
 
     protected Bus getBus() {
@@ -157,24 +162,30 @@ public class WSDLManagerImpl implements WSDLManager {
     }
 
     public Definition getDefinition(String url) throws WSDLException {
-        synchronized (definitionsMap) {
+        //synchronized (definitionsMap) {
+        lock.lock();
             if (definitionsMap.containsKey(url)) {
                 return definitionsMap.get(url);
             }
-        }
+        //}
+        lock.unlock();
         Definition def = loadDefinition(url);
-        synchronized (definitionsMap) {
+        //synchronized (definitionsMap) {
+        lock.lock();
             definitionsMap.put(url, def);
-        }
+        //}
+        lock.unlock();
         return def;
     }
 
     public Definition getDefinition(final Element el) throws WSDLException {
-        synchronized (definitionsMap) {
+        //synchronized (definitionsMap) {
+        lock.lock();
             if (definitionsMap.containsKey(el)) {
                 return definitionsMap.get(el);
             }
-        }
+        //}
+        lock.unlock();
         final WSDLReader reader = factory.newWSDLReader();
         reader.setFeature("javax.wsdl.verbose", false);
         reader.setExtensionRegistry(registry);
@@ -193,17 +204,21 @@ public class WSDLManagerImpl implements WSDLManager {
             }
         }
 
-        synchronized (definitionsMap) {
+        //synchronized (definitionsMap) {
+        lock.lock();
             definitionsMap.put(el, def);
-        }
+        //}
+        lock.unlock();
         return def;
     }
 
 
     public void addDefinition(Object key, Definition wsdl) {
-        synchronized (definitionsMap) {
+        //synchronized (definitionsMap) {
+        lock.lock();
             definitionsMap.put(key, wsdl);
-        }
+        lock.unlock();
+        //}
     }
 
     protected Definition loadDefinition(String url) throws WSDLException {
@@ -301,7 +316,9 @@ public class WSDLManagerImpl implements WSDLManager {
         if (disableSchemaCache) {
             return null;
         }
-        synchronized (definitionsMap) {
+        //
+        lock.lock();
+        //synchronized (definitionsMap) {
             for (Map.Entry<Object, Definition> e : definitionsMap.entrySet()) {
                 if (e.getValue() == wsdl) {
                     ServiceSchemaInfo info = schemaCacheMap.get(e.getKey());
@@ -310,19 +327,22 @@ public class WSDLManagerImpl implements WSDLManager {
                     }
                 }
             }
-        }
+        //}
+        lock.unlock();
         return null;
     }
 
     public void putSchemasForDefinition(Definition wsdl, ServiceSchemaInfo schemas) {
         if (!disableSchemaCache) {
-            synchronized (definitionsMap) {
+            lock.lock();
+            //synchronized (definitionsMap) {
                 for (Map.Entry<Object, Definition> e : definitionsMap.entrySet()) {
                     if (e.getValue() == wsdl) {
                         schemaCacheMap.put(e.getKey(), schemas);
                     }
                 }
-            }
+            //}
+            lock.unlock();
         }
     }
 
@@ -340,7 +360,28 @@ public class WSDLManagerImpl implements WSDLManager {
 
     @Override
     public void removeDefinition(Definition wsdl) {
-        synchronized (definitionsMap) {
+        //synchronized (definitionsMap) {
+        lock.lock();
+            List<Object> keys = new ArrayList<>();
+            for (Map.Entry<Object, Definition> e : definitionsMap.entrySet()) {
+                if (e.getValue() == wsdl) {
+                    keys.add(e.getKey());
+                }
+            }
+            for (Object o : keys) {
+                definitionsMap.remove(o);
+                schemaCacheMap.remove(o);
+            }
+        //}
+        lock.unlock();
+    }
+
+    @Override
+    public void removeDefinition(String url) {
+        //synchronized (definitionsMap) {
+        lock.lock();
+        Definition wsdl = definitionsMap.get(url);
+        if (wsdl != null) {
             List<Object> keys = new ArrayList<>();
             for (Map.Entry<Object, Definition> e : definitionsMap.entrySet()) {
                 if (e.getValue() == wsdl) {
@@ -352,25 +393,8 @@ public class WSDLManagerImpl implements WSDLManager {
                 schemaCacheMap.remove(o);
             }
         }
-    }
-
-    @Override
-    public void removeDefinition(String url) {
-        synchronized (definitionsMap) {
-            Definition wsdl = definitionsMap.get(url);
-            if (wsdl != null) {
-                List<Object> keys = new ArrayList<>();
-                for (Map.Entry<Object, Definition> e : definitionsMap.entrySet()) {
-                    if (e.getValue() == wsdl) {
-                        keys.add(e.getKey());
-                    }
-                }
-                for (Object o : keys) {
-                    definitionsMap.remove(o);
-                    schemaCacheMap.remove(o);
-                }
-            }
-        }
+       //}
+       lock.unlock();
     }
 
 }

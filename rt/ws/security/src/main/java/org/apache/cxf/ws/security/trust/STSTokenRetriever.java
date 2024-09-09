@@ -19,10 +19,14 @@
 
 package org.apache.cxf.ws.security.trust;
 
+import java.lang.ref.WeakReference;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import org.apache.cxf.common.logging.LogUtils;
@@ -43,6 +47,7 @@ public final class STSTokenRetriever {
     private static final Logger LOG = LogUtils.getL7dLogger(STSTokenRetriever.class);
     private static final String ASSOCIATED_TOKEN =
         STSTokenRetriever.class.getName() + "-" + "Associated_Token";
+    private final static ConcurrentHashMap<WeakReference<STSClient>, ReentrantLock> lockMap = new ConcurrentHashMap<>();
 
     private STSTokenRetriever() {
     }
@@ -66,8 +71,11 @@ public final class STSTokenRetriever {
         }
         
         STSClient client = STSUtils.getClientWithIssuer(message, "sts", params.getIssuer());
-        synchronized (client) {
+
+        ReentrantLock lock = lockMap.computeIfAbsent(new WeakReference<>(client), d -> new ReentrantLock());
+
             try {
+                lock.lock();
                 client.setMessage(message);
                 
                 // Transpose ActAs/OnBehalfOf info from original request to the STS client.
@@ -126,7 +134,8 @@ public final class STSTokenRetriever {
                 client.setTrust((Trust13)null);
                 client.setTemplate(null);
                 client.setAddressingNamespace(null);
-            }
+        //    }
+                lock.unlock();
         }
     }
     
@@ -172,8 +181,11 @@ public final class STSTokenRetriever {
             return getToken(message, params, tokenCacher);
         }
 
-        synchronized (client) {
+        ReentrantLock lock = lockMap.computeIfAbsent(client, d -> new ReentrantLock());
+
+        //synchronized (client) {
             try {
+                lock.lock();
                 Map<String, Object> ctx = client.getRequestContext();
                 mapSecurityProps(message, ctx);
 
@@ -214,8 +226,9 @@ public final class STSTokenRetriever {
                 client.setTrust((Trust13)null);
                 client.setTemplate(null);
                 client.setAddressingNamespace(null);
+                lock.unlock();
             }
-        }
+        //}
     }
     
     private static String getAddressingNamespaceURI(Message message) {

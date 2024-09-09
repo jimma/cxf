@@ -19,6 +19,7 @@
 
 package org.apache.cxf.wsdl11;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.wsdl.Definition;
 import javax.wsdl.Import;
 import javax.wsdl.Types;
@@ -35,6 +38,7 @@ import javax.wsdl.extensions.schema.Schema;
 import javax.wsdl.extensions.schema.SchemaImport;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import org.apache.cxf.Bus;
@@ -50,6 +54,7 @@ import static org.apache.cxf.helpers.CastUtils.cast;
 public final class SchemaUtil {
     private final Map<String, Element> schemaList;
     private final Map<String, String> catalogResolved = new HashMap<>();
+    private final ConcurrentHashMap<WeakReference<Document>, ReentrantLock> lockMap = new ConcurrentHashMap<>();
     private final Bus bus;
 
     public SchemaUtil(final Bus b, final Map<String, Element> s) {
@@ -105,7 +110,9 @@ public final class SchemaUtil {
                     }
                 }
                 if (schemaElem != null) {
-                    synchronized (schemaElem.getOwnerDocument()) {
+                      ReentrantLock schemaLock = lockMap.computeIfAbsent(new WeakReference<>(schemaElem.getOwnerDocument()), d -> new ReentrantLock());
+                      schemaLock.lock();
+                //    synchronized (schemaElem.getOwnerDocument()) {
                         for (Object prefix : def.getNamespaces().keySet()) {
                             String ns = (String)def.getNamespaces().get(prefix);
                             if ("".equals(prefix)) {
@@ -150,7 +157,8 @@ public final class SchemaUtil {
                         schemaInfo.setElement(schemaElem);
                         schemaInfos.add(schemaInfo);
                         schemaCount++;
-                    }
+                        schemaLock.unlock();
+                    //}
                 }
             }
         }
