@@ -30,6 +30,7 @@ import java.util.ResourceBundle;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.apache.cxf.message.MessageUtils;
 import org.w3c.dom.Node;
 
 import jakarta.xml.soap.AttachmentPart;
@@ -211,7 +212,15 @@ public class SAAJOutInterceptor extends AbstractSoapInterceptor {
                 try {
                     if (writer != null) {
                         StaxUtils.copy(new W3CDOMStreamReader(soapMessage.getSOAPPart()), writer);
+                        if (MessageUtils.isRequestor(message)) {
+                            System.out.println("---Client Writer: " + writer.toString());
+                        } else {
+                            System.out.println("---Server Writer: "+ writer.toString());
+                        }
+                        System.out.println("******* Thread is ******* " + Thread.currentThread());
+                        System.out.println("******* Writer is ******* " + writer);
                         writer.flush();
+                        System.out.println("******* Writer Done ******* " + writer);
                         message.setContent(XMLStreamWriter.class, writer);
                     }
                 } catch (XMLStreamException e) {
@@ -221,6 +230,8 @@ public class SAAJOutInterceptor extends AbstractSoapInterceptor {
                     }
                     throw new SoapFault(new Message("SOAPEXCEPTION", BUNDLE, e.getMessage()), e,
                                         message.getVersion().getSender());
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }

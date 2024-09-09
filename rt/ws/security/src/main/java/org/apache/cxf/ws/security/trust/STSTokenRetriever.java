@@ -125,8 +125,14 @@ public final class STSTokenRetriever {
                 }
                 return secToken;
             } catch (RuntimeException e) {
+                System.out.println("-----------STSTokenRetriever----------");
+                e.printStackTrace();
+                System.out.println("***********STSTokenRetriever***********");
                 throw e;
             } catch (Exception e) {
+                System.out.println("-----------STSTokenRetriever----------");
+                e.printStackTrace();
+                System.out.println("***********STSTokenRetriever***********");
                 throw new Fault(e);
             } finally {
                 client.setTrust((Trust10)null);

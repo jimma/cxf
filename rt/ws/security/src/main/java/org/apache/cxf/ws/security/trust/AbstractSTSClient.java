@@ -21,6 +21,8 @@ package org.apache.cxf.ws.security.trust;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
@@ -33,6 +35,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -158,6 +162,8 @@ import org.apache.xml.security.stax.ext.XMLSecurityConstants;
 public abstract class AbstractSTSClient implements Configurable, InterceptorProvider {
     private static final Logger LOG = LogUtils.getL7dLogger(AbstractSTSClient.class);
 
+    private static Method executorMethod = null;
+
     protected Bus bus;
     protected String name = "default.sts-client";
     protected Client client;
@@ -208,6 +214,28 @@ public abstract class AbstractSTSClient implements Configurable, InterceptorProv
     protected List<Feature> features;
 
     protected TLSClientParameters tlsClientParameters;
+
+
+
+    static {
+        Method method = null;
+
+        try {
+            Class<?> clazz = Class.forName("java.util.concurrent.Executors");
+            //noinspection JavaReflectionMemberAccess
+            method = clazz.getMethod("newSingleThreadExecutor", Void.class);
+        } catch (ReflectiveOperationException e) {
+            // Virtual threads are not supported
+        }
+        executorMethod = method;
+    }
+
+    static boolean canRunVirtual() {
+        return executorMethod != null;
+    }
+
+
+
 
     public AbstractSTSClient(Bus b) {
         bus = b;
@@ -679,6 +707,16 @@ public abstract class AbstractSTSClient implements Configurable, InterceptorProv
             throw new TrustException(LOG, "NO_LOCATION");
         }
 
+        if (canRunVirtual()) {
+            try {
+                client.setExecutor((Executor)executorMethod.invoke(null , null));
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            } catch (InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         client.getInFaultInterceptors().addAll(inFault);
         client.getInInterceptors().addAll(in);
         client.getOutInterceptors().addAll(out);
@@ -874,7 +912,6 @@ public abstract class AbstractSTSClient implements Configurable, InterceptorProv
         writer.writeEndElement();
 
         Object[] obj = client.invoke(boi, new DOMSource(writer.getDocument().getDocumentElement()));
-
         @SuppressWarnings("unchecked")
         Collection<Attachment> attachments =
         (Collection<Attachment>)client.getResponseContext().get(Message.ATTACHMENTS);

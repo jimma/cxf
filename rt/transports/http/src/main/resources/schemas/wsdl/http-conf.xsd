@@ -162,7 +162,7 @@
             <xs:documentation>Properties used to configure a client-side HTTP port</xs:documentation>
         </xs:annotation>
         <xs:sequence/>
-        <xs:attribute name="ConnectionTimeout" type="ptp:ParameterizedUInt" use="optional" default="30000">
+        <xs:attribute name="ConnectionTimeout" type="ptp:ParameterizedUInt" use="optional" default="600000">
             <xs:annotation>
                 <xs:documentation>
                 Specifies the amount of time, in milliseconds, that the consumer will attempt to establish a connection before it times out. 0 is infinite.
@@ -170,7 +170,7 @@
             </xs:annotation>      
         </xs:attribute>
 
-        <xs:attribute name="ReceiveTimeout" type="ptp:ParameterizedUInt" use="optional" default="60000">
+        <xs:attribute name="ReceiveTimeout" type="ptp:ParameterizedUInt" use="optional" default="600000">
             <xs:annotation>
                 <xs:documentation>
                 Specifies the amount of time, in milliseconds, that the consumer will wait for a response before it times out. 0 is infinite.

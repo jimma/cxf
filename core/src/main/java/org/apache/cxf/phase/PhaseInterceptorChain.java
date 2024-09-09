@@ -181,11 +181,15 @@ public class PhaseInterceptorChain implements InterceptorChain {
 
     }
 
-    public synchronized State getState() {
-        return state;
+    public State getState() {
+        lock.lock();
+        State result = state;
+        lock.unlock();
+        return result;
     }
 
-    public synchronized void releaseAndAcquireChain() {
+    public void releaseAndAcquireChain() {
+        lock.lock();
         while (!chainReleased) {
             try {
                 this.wait();
@@ -194,11 +198,16 @@ public class PhaseInterceptorChain implements InterceptorChain {
             }
         }
         chainReleased = false;
+        lock.unlock();
     }
 
-    public synchronized void releaseChain() {
+    public void releaseChain() {
+        lock.lock();
         this.chainReleased = true;
-        this.notifyAll();
+        //lock.notifyAll();
+        lock.unlock();
+
+
     }
 
     public PhaseInterceptorChain cloneChain() {
@@ -256,29 +265,37 @@ public class PhaseInterceptorChain implements InterceptorChain {
         }
     }
 
-    public synchronized void pause() {
+    public void pause() {
+        lock.lock();
         state = State.PAUSED;
         pausedMessage = CURRENT_MESSAGE.get();
+        lock.unlock();
     }
-    public synchronized void unpause() {
+    public void unpause() {
+        lock.lock();
         if (state == State.PAUSED || state == State.SUSPENDED) {
             state = State.EXECUTING;
             pausedMessage = null;
         }
+        lock.unlock();
     }
 
-    public synchronized void suspend() {
+    public void suspend() {
+        lock.lock();
         state = State.SUSPENDED;
         pausedMessage = CURRENT_MESSAGE.get();
+        lock.unlock();
     }
 
-    public synchronized void resume() {
+    public void resume() {
+        lock.lock();
         if (state == State.PAUSED || state == State.SUSPENDED) {
             state = State.EXECUTING;
             Message m = pausedMessage;
             pausedMessage = null;
             doIntercept(m);
         }
+        lock.unlock();
     }
 
     /**
@@ -289,6 +306,9 @@ public class PhaseInterceptorChain implements InterceptorChain {
      */
     @SuppressWarnings("unchecked")
     public boolean doIntercept(Message message) {
+        /*if (!MessageUtils.isRequestor(message)) {
+            System.out.println("----PhaseInterceptorChainp--- " + this.toString());
+        }*/
         lock.lock();
         updateIterator();
 
@@ -307,13 +327,17 @@ public class PhaseInterceptorChain implements InterceptorChain {
                     if (isFineLogging) {
                         LOG.fine("Invoking handleMessage on interceptor " + currentInterceptor);
                     }
-                    //System.out.println("-----------" + currentInterceptor);
+                    if (!MessageUtils.isRequestor(message)) {
+                        System.out.println("-----------" + currentInterceptor);
+                    }
                     currentInterceptor.handleMessage(message);
                     if (state == State.SUSPENDED) {
                          // throw the exception to make sure thread exit without interrupt
                         throw new SuspendedInvocationException();
                     }
-
+                    if (!MessageUtils.isRequestor(message)) {
+                        System.out.println("-----------" + currentInterceptor + " OK");
+                    }
                 } catch (SuspendedInvocationException ex) {
 
                     // Moving the chain iterator to the previous interceptor is needed
@@ -330,6 +354,11 @@ public class PhaseInterceptorChain implements InterceptorChain {
                     pause();
                     throw ex;
                 } catch (RuntimeException ex) {
+                    if (!MessageUtils.isRequestor(message)) {
+                        System.out.println("-----------interceptor throws exception" + ex.toString());
+                        ex.printStackTrace();
+                        System.out.println("-----------interceptor throws exception" + ex.toString());
+                    }
                     if (!faultOccurred) {
                         faultOccurred = true;
                         wrapExceptionAsFault(message, ex);
