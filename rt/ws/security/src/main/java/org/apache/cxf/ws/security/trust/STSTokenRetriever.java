@@ -26,6 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.wss4j.stax.impl.processor.input.WSSEncryptedKeyInputHandler;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -181,7 +182,7 @@ public final class STSTokenRetriever {
             return getToken(message, params, tokenCacher);
         }
 
-        ReentrantLock lock = lockMap.computeIfAbsent(client, d -> new ReentrantLock());
+        ReentrantLock lock = lockMap.computeIfAbsent(new WeakReference<>(client), d -> new ReentrantLock());
 
         //synchronized (client) {
             try {
