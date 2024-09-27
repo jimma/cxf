@@ -51,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(value = org.junit.runners.Parameterized.class)
 public class JAXRSClientChunkingTest extends AbstractBusClientServerTestBase {
-    private static final String PORT = allocatePort(FileStoreServer.class);
+    private static final String PORT = "23080";
     private final Boolean chunked;
 
     public JAXRSClientChunkingTest(Boolean chunked) {
@@ -72,7 +72,8 @@ public class JAXRSClientChunkingTest extends AbstractBusClientServerTestBase {
 
     @Test
     public void testMultipartChunking() {
-        final String url = "http://localhost:" + PORT + "/file-store";
+        final String url = "http://localhost:23088/file-store";
+        System.out.println("endpoint URL : " + url);
         final WebClient webClient = WebClient.create(url, List.of(new MultipartProvider())).query("chunked", chunked);
         WebClient.getConfig(webClient).getHttpConduit().getClient().setAllowChunking(chunked);
 
@@ -94,7 +95,7 @@ public class JAXRSClientChunkingTest extends AbstractBusClientServerTestBase {
     
     @Test
     public void testStreamChunking() throws IOException {
-        final String url = "http://localhost:" + PORT + "/file-store/stream";
+        final String url = "http://localhost:23088/file-store/stream";
         final WebClient webClient = WebClient.create(url).query("chunked", chunked);
         WebClient.getConfig(webClient).getHttpConduit().getClient().setAllowChunking(chunked);
 
